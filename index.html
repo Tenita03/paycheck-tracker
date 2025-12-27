@@ -82,11 +82,6 @@ h3 {
   <button onclick="toggleTheme()">🌙</button>
 </header>
 
-<div class="card">
-  <label>🎨 Accent Color</label>
-  <input type="color" onchange="setColor(this.value)">
-</div>
-
 <div class="card summary" id="summary"></div>
 
 <h3>Paychecks</h3>
@@ -99,61 +94,3 @@ h3 {
 
 <script>
 let paychecks = JSON.parse(localStorage.getItem("paychecks"))||[];
-let bills = JSON.parse(localStorage.getItem("bills"))||[];
-let dark = JSON.parse(localStorage.getItem("dark"))||false;
-let accent = localStorage.getItem("accent")||"#4CAF50";
-document.documentElement.style.setProperty('--accent',accent);
-if(dark) document.body.classList.add("dark");
-
-function save(){
-  localStorage.setItem("paychecks",JSON.stringify(paychecks));
-  localStorage.setItem("bills",JSON.stringify(bills));
-  localStorage.setItem("dark",dark);
-  localStorage.setItem("accent",accent);
-}
-
-function toggleTheme(){
-  dark=!dark;
-  document.body.classList.toggle("dark");
-  save();
-}
-
-function setColor(c){
-  accent=c;
-  document.documentElement.style.setProperty('--accent',c);
-  save();
-}
-
-function addPaycheck(){ paychecks.push({}); save(); render(); }
-function addBill(){ bills.push({}); save(); render(); }
-
-function render(){
-  let income=paychecks.reduce((t,p)=>t+(+p.actual||0),0);
-  let expenses=bills.reduce((t,b)=>t+(+b.amount||0),0);
-  document.getElementById("summary").innerText=
-    `Monthly Income: $${income} | Bills: $${expenses} | Left: $${income-expenses}`;
-
-  document.getElementById("paychecks").innerHTML=paychecks.map((p,i)=>`
-    <div class="card">
-      <input type="date" value="${p.date||''}" onchange="paychecks[${i}].date=this.value;save()">
-      <input type="number" placeholder="Expected Amount" value="${p.expected||''}" onchange="paychecks[${i}].expected=this.value;save()">
-      <input type="number" placeholder="Actual Amount" value="${p.actual||''}" onchange="paychecks[${i}].actual=this.value;save();render()">
-      <div>Difference: ${(p.actual||0)-(p.expected||0)}</div>
-    </div>
-  `).join("");
-
-  document.getElementById("bills").innerHTML=bills.map((b,i)=>`
-    <div class="card">
-      <input placeholder="Bill Name" value="${b.name||''}" onchange="bills[${i}].name=this.value;save()">
-      <input type="date" value="${b.due||''}" onchange="bills[${i}].due=this.value;save()">
-      <input type="number" placeholder="Amount Due" value="${b.amount||''}" onchange="bills[${i}].amount=this.value;save();render()">
-      <input type="number" placeholder="Amount Paid" value="${b.paid||''}" onchange="bills[${i}].paid=this.value;save()">
-      <label><input type="checkbox" ${b.paid>=b.amount?"checked":""} disabled> Paid</label>
-    </div>
-  `).join("");
-}
-
-render();
-</script>
-</body>
-</html>
