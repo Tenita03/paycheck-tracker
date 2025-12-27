@@ -2,142 +2,139 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<!-- iPhone PWA settings -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Paycheck Tracker">
-
-<!-- APP ICON (temporary emoji icon) -->
-<link rel="apple-touch-icon" href="https://via.placeholder.com/180/4CAF50/ffffff?text=%F0%9F%92%B0">
-
+<link rel="apple-touch-icon" href="icon.png">
 <title>Paycheck Tracker</title>
 
 <style>
 :root {
-  --bg: #f2f2f7;
-  --card: #ffffff;
-  --text: #000;
-  --accent: #4CAF50;
+  --bg:#f2f2f7;
+  --card:#fff;
+  --text:#000;
+  --accent:#4CAF50;
 }
-
 body.dark {
-  --bg: #000;
-  --card: #1c1c1e;
-  --text: #fff;
-  --accent: #30d158;
+  --bg:#000;
+  --card:#1c1c1e;
+  --text:#fff;
 }
-
 body {
-  margin: 0;
-  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro";
+  margin:0;
+  padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+  line-height:1.4;
 }
-
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
 }
-
 button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 16px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  font-size:16px;
+  width:auto;
 }
-
 .card {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 14px;
-  margin-bottom: 14px;
+  background:var(--card);
+  border-radius:16px;
+  padding:14px;
+  margin:12px 0;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+input, select, textarea {
+  width:100%;
+  box-sizing:border-box;
+  padding:10px;
+  margin:6px 0;
+  font-size:16px;
+  border-radius:10px;
+  border:1px solid #ccc;
 }
-
-.section-title {
-  font-size: 22px;
-  margin: 20px 0 10px;
+.summary {
+  font-size:18px;
+  font-weight:600;
+  padding:10px;
+}
+h3 {
+  margin-bottom:4px;
+}
+@media (max-width: 450px) {
+  body { padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom); }
+  button { font-size:14px; padding:8px 10px; }
+  input, select { font-size:14px; padding:8px; }
 }
 </style>
 </head>
 
 <body>
+
 <header>
-  <h1>💰 Paycheck Tracker</h1>
+  <h2>💰 Paycheck Tracker</h2>
   <button onclick="toggleTheme()">🌙</button>
 </header>
 
-<div class="section-title">Paychecks</div>
+<div class="card">
+  <label>🎨 Accent Color</label>
+  <input type="color" onchange="setColor(this.value)">
+</div>
+
+<div class="card summary" id="summary"></div>
+
+<h3>Paychecks</h3>
 <button onclick="addPaycheck()">➕ Add Paycheck</button>
 <div id="paychecks"></div>
 
-<div class="section-title">Bills</div>
+<h3>Bills</h3>
 <button onclick="addBill()">➕ Add Bill</button>
 <div id="bills"></div>
 
 <script>
-let paychecks = JSON.parse(localStorage.getItem("paychecks")) || [];
-let bills = JSON.parse(localStorage.getItem("bills")) || [];
-let dark = JSON.parse(localStorage.getItem("dark")) || false;
+let paychecks = JSON.parse(localStorage.getItem("paychecks"))||[];
+let bills = JSON.parse(localStorage.getItem("bills"))||[];
+let dark = JSON.parse(localStorage.getItem("dark"))||false;
+let accent = localStorage.getItem("accent")||"#4CAF50";
+document.documentElement.style.setProperty('--accent', accent);
+if(dark) document.body.classList.add("dark");
 
-if (dark) document.body.classList.add("dark");
-
-function save() {
-  localStorage.setItem("paychecks", JSON.stringify(paychecks));
-  localStorage.setItem("bills", JSON.stringify(bills));
-  localStorage.setItem("dark", JSON.stringify(dark));
+function save(){
+  localStorage.setItem("paychecks",JSON.stringify(paychecks));
+  localStorage.setItem("bills",JSON.stringify(bills));
+  localStorage.setItem("dark",dark);
+  localStorage.setItem("accent",accent);
 }
 
-function toggleTheme() {
-  dark = !dark;
+function toggleTheme(){
+  dark=!dark;
   document.body.classList.toggle("dark");
   save();
 }
 
-function render() {
-  document.getElementById("paychecks").innerHTML = paychecks.map((p,i)=>`
-    <div class="card">
-      <input type="date" value="${p.date||''}" onchange="paychecks[${i}].date=this.value;save()">
-      <input type="number" placeholder="Expected Amount" value="${p.expected||''}" onchange="paychecks[${i}].expected=this.value;save()">
-      <input type="number" placeholder="Actual Amount" value="${p.actual||''}" onchange="paychecks[${i}].actual=this.value;save()">
-      <div>Difference: ${(p.actual||0)-(p.expected||0)}</div>
-    </div>
-  `).join("");
-
-  document.getElementById("bills").innerHTML = bills.map((b,i)=>`
-    <div class="card">
-      <input placeholder="Bill Name" value="${b.name||''}" onchange="bills[${i}].name=this.value;save()">
-      <input type="date" value="${b.due||''}" onchange="bills[${i}].due=this.value;save()">
-      <input type="number" placeholder="Amount Due" value="${b.amount||''}" onchange="bills[${i}].amount=this.value;save()">
-      <input type="number" placeholder="Amount Paid" value="${b.paid||''}" onchange="bills[${i}].paid=this.value;save()">
-      <label>
-        <input type="checkbox" ${b.paid>=b.amount?"checked":""} disabled>
-        Paid
-      </label>
-    </div>
-  `).join("");
+function setColor(c){
+  accent=c;
+  document.documentElement.style.setProperty('--accent',c);
+  save();
 }
 
 function addPaycheck(){ paychecks.push({}); save(); render(); }
 function addBill(){ bills.push({}); save(); render(); }
 
-render();
-</script>
-</body>
-</html>
+function render(){
+  let income=paychecks.reduce((t,p)=>t+(+p.actual||0),0);
+  let expenses=bills.reduce((t,b)=>t+(+b.amount||0),0);
+  document.getElementById("summary").innerText=
+    `Monthly Income: $${income} | Bills: $${expenses} | Left: $${income-expenses}`;
+
+  document.getElementById("paychecks").innerHTML = paychecks.map((p,i)=>`
+    <div class="card">
+      <input type="date" value="${p.date||''}" onchange="paychecks[${i}].date=this.value;save()">
+      <input type="number" placeholder="Expected Amount" value="${p.expected||''}" onchange="paychecks[${i}].expected=this.value;save()">
+      <input type="number" placeholder="Actual Amount" value="${p.actual||''}" onchange="paychecks[${i}].actual=this.value;save();r
