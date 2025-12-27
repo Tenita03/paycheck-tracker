@@ -43,6 +43,13 @@ button {
   font-size:16px;
   width:auto;
 }
+.deleteBtn {
+  background:#ff3b30;
+  padding:5px 10px;
+  font-size:14px;
+  margin-top:6px;
+  display:inline-block;
+}
 .card {
   background:var(--card);
   border-radius:16px;
@@ -124,6 +131,18 @@ document.addEventListener("DOMContentLoaded", function(){
     render();
   }
 
+  function removePaycheck(index){
+    paychecks.splice(index,1);
+    save();
+    render();
+  }
+
+  function removeBill(index){
+    bills.splice(index,1);
+    save();
+    render();
+  }
+
   function render(){
     let income = paychecks.reduce((t,p)=>t+(+p.actual||0),0);
     let expenses = bills.reduce((t,b)=>t+(+b.amount||0),0);
@@ -136,6 +155,7 @@ document.addEventListener("DOMContentLoaded", function(){
         <input type="number" placeholder="Expected Amount" value="${p.expected||''}" onchange="paychecks[${i}].expected=this.value;save()">
         <input type="number" placeholder="Actual Amount" value="${p.actual||''}" onchange="paychecks[${i}].actual=this.value;save();render()">
         <div>Difference: ${(p.actual||0)-(p.expected||0)}</div>
+        <button class="deleteBtn" onclick="removePaycheck(${i})">🗑️ Remove</button>
       </div>
     `).join("");
 
@@ -143,21 +163,4 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="card">
         <input placeholder="Bill Name" value="${b.name||''}" onchange="bills[${i}].name=this.value;save()">
         <input type="date" value="${b.due||''}" onchange="bills[${i}].due=this.value;save()">
-        <input type="number" placeholder="Amount Due" value="${b.amount||''}" onchange="bills[${i}].amount=this.value;save();render()">
-        <input type="number" placeholder="Amount Paid" value="${b.paid||''}" onchange="bills[${i}].paid=this.value;save()">
-        <label><input type="checkbox" ${b.paid>=b.amount?"checked":""} disabled> Paid</label>
-      </div>
-    `).join("");
-  }
-
-  // Bind buttons
-  document.getElementById("toggleThemeBtn").addEventListener("click", toggleTheme);
-  document.getElementById("addPaycheckBtn").addEventListener("click", addPaycheck);
-  document.getElementById("addBillBtn").addEventListener("click", addBill);
-
-  render();
-});
-</script>
-
-</body>
-</html>
+        <input type="number" placeholder="Amount Due" value="${
