@@ -25,7 +25,7 @@ body {
   padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
   background:var(--bg);
   color:var(--text);
-  font-family:-apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;
   line-height:1.4;
 }
 header {
@@ -67,10 +67,10 @@ input, select, textarea {
 h3 {
   margin-bottom:4px;
 }
-@media (max-width: 450px) {
-  body { padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom); }
-  button { font-size:14px; padding:8px 10px; }
-  input, select { font-size:14px; padding:8px; }
+@media(max-width:450px){
+  body{padding:env(safe-area-inset-top) 8px env(safe-area-inset-bottom);}
+  button{font-size:14px;padding:8px 10px;}
+  input,select{font-size:14px;padding:8px;}
 }
 </style>
 </head>
@@ -102,7 +102,7 @@ let paychecks = JSON.parse(localStorage.getItem("paychecks"))||[];
 let bills = JSON.parse(localStorage.getItem("bills"))||[];
 let dark = JSON.parse(localStorage.getItem("dark"))||false;
 let accent = localStorage.getItem("accent")||"#4CAF50";
-document.documentElement.style.setProperty('--accent', accent);
+document.documentElement.style.setProperty('--accent',accent);
 if(dark) document.body.classList.add("dark");
 
 function save(){
@@ -133,8 +133,20 @@ function render(){
   document.getElementById("summary").innerText=
     `Monthly Income: $${income} | Bills: $${expenses} | Left: $${income-expenses}`;
 
-  document.getElementById("paychecks").innerHTML = paychecks.map((p,i)=>`
+  document.getElementById("paychecks").innerHTML=paychecks.map((p,i)=>`
     <div class="card">
       <input type="date" value="${p.date||''}" onchange="paychecks[${i}].date=this.value;save()">
       <input type="number" placeholder="Expected Amount" value="${p.expected||''}" onchange="paychecks[${i}].expected=this.value;save()">
-      <input type="number" placeholder="Actual Amount" value="${p.actual||''}" onchange="paychecks[${i}].actual=this.value;save();r
+      <input type="number" placeholder="Actual Amount" value="${p.actual||''}" onchange="paychecks[${i}].actual=this.value;save();render()">
+      <div>Difference: ${(p.actual||0)-(p.expected||0)}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("bills").innerHTML=bills.map((b,i)=>`
+    <div class="card">
+      <input placeholder="Bill Name" value="${b.name||''}" onchange="bills[${i}].name=this.value;save()">
+      <input type="date" value="${b.due||''}" onchange="bills[${i}].due=this.value;save()">
+      <input type="number" placeholder="Amount Due" value="${b.amount||''}" onchange="bills[${i}].amount=this.value;save();render()">
+      <input type="number" placeholder="Amount Paid" value="${b.paid||''}" onchange="bills[${i}].paid=this.value;save()">
+      <label><input type="checkbox" ${b.paid>=b.amount?"checked":""} disabled> Paid</label>
+    </
