@@ -2,106 +2,50 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Paycheck Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paycheck Tracker v14</title>
 <style>
 :root {
-  --bg:#f2f2f7;
-  --card:#fff;
-  --text:#000;
-  --accent:#4CAF50;
-  --paid:#e6ffe6;
-  --unpaid:#ffe6e6;
-  --income-bar:#4CAF50;
-  --bill-bar:#ff3b30;
-  --salary:#4CAF50;
-  --bonus:#2196F3;
-  --freelance:#9C27B0;
-  --other:#FF9800;
-  --bill:#f44336;
+  --bg:#f2f2f7; --card:#fff; --text:#000; --accent:#4CAF50;
+  --paid:#e6ffe6; --unpaid:#ffe6e6; --income-bar:#4CAF50; --bill-bar:#ff3b30;
+  --salary:#4CAF50; --bonus:#2196F3; --freelance:#9C27B0; --other:#FF9800; --bill:#f44336;
 }
 body.dark {
-  --bg:#000;
-  --card:#1c1c1e;
-  --text:#fff;
-  --paid:#173d17;
-  --unpaid:#3d1717;
-  --income-bar:#5efc82;
-  --bill-bar:#ff6b60;
+  --bg:#000; --card:#1c1c1e; --text:#fff; --paid:#173d17; --unpaid:#3d1717;
+  --income-bar:#5efc82; --bill-bar:#ff6b60;
 }
-body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;
-}
-header {
-  position:sticky;top:0;z-index:20;
-  display:flex;justify-content:space-between;align-items:center;
-  background:var(--bg);padding:12px;border-bottom:1px solid rgba(0,0,0,.1);
-}
-button {
-  background:var(--accent);color:#fff;border:none;border-radius:10px;
-  padding:8px 12px;font-size:15px;cursor:pointer;
-}
+body {margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;}
+header {position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-bottom:1px solid rgba(0,0,0,.1); z-index:20;}
+button {background:var(--accent); color:#fff; border:none; border-radius:10px; padding:8px 12px; font-size:15px; cursor:pointer;}
 button:hover{opacity:0.9;}
-.card {
-  background:var(--card);border-radius:16px;padding:12px;margin:12px;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);transition:background .3s;
-}
+.card {background:var(--card);border-radius:16px;padding:12px;margin:12px;box-shadow:0 2px 5px rgba(0,0,0,.1);transition:background .3s;}
 .card.paid{background:var(--paid);}
 .card.unpaid{background:var(--unpaid);}
-.deleteBtn{background:#ff3b30;color:#fff;border:none;border-radius:10px;
-  padding:5px 10px;margin-top:6px;font-size:14px;}
-.input-row{
-  display:flex;align-items:center;gap:8px;margin:4px 0;
-}
-.input-row span.icon{
-  width:24px;text-align:center;font-size:17px;opacity:0.8;
-}
-.input-row input,.input-row select{
-  flex:1;padding:8px;border-radius:8px;border:1px solid #ccc;
-  font-size:15px;
-}
-.badge{
-  padding:2px 6px;border-radius:6px;color:#fff;font-size:13px;margin-left:4px;
-}
-.badge.salary{background:var(--salary);}
-.badge.bonus{background:var(--bonus);}
-.badge.freelance{background:var(--freelance);}
-.badge.other{background:var(--other);}
+.deleteBtn{background:#ff3b30;color:#fff;border:none;border-radius:10px;padding:5px 10px;margin-top:6px;font-size:14px;}
+.input-row{display:flex;align-items:center;gap:8px;margin:4px 0;}
+.input-row span.icon{width:24px;text-align:center;font-size:17px;opacity:0.8;}
+.input-row input,.input-row select{flex:1;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:15px;}
+.badge{padding:2px 6px;border-radius:6px;color:#fff;font-size:13px;margin-left:4px;}
+.badge.salary{background:var(--salary);} .badge.bonus{background:var(--bonus);}
+.badge.freelance{background:var(--freelance);} .badge.other{background:var(--other);}
 .badge.bill{background:var(--bill);}
 .summary-container{position:sticky;top:60px;z-index:10;padding:0 12px;}
-.summary{
-  background:var(--card);border-radius:16px;padding:10px;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;
-}
-.progress-bar{height:6px;border-radius:3px;background:rgba(0,0,0,0.1);
-  margin:4px 0 8px;overflow:hidden;}
+.summary{background:var(--card);border-radius:16px;padding:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;}
+.progress-bar{height:6px;border-radius:3px;background:rgba(0,0,0,0.1);margin:4px 0 8px;overflow:hidden;}
 .progress-fill{height:100%;width:0;transition:width .7s ease;}
-.filters{
-  display:flex;gap:8px;flex-wrap:wrap;margin:10px 12px;
-}
-.filters select{
-  flex:1;min-width:130px;padding:6px;font-size:14px;border-radius:8px;
-}
-label.inline{
-  display:flex;align-items:center;gap:4px;font-size:14px;margin:0;
-}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:10px 12px;}
+.filters select{flex:1;min-width:130px;padding:6px;font-size:14px;border-radius:8px;}
 h3{margin:12px;}
-@media (max-width:500px){
-  .filters{flex-direction:column;}
-  .input-row span.icon{display:none;}
-}
+@media (max-width:500px){.filters{flex-direction:column;} .input-row span.icon{display:none;}}
 </style>
 </head>
-
 <body>
 <header>
   <h2>💰 Paycheck Tracker</h2>
   <div>
     <button id="toggleThemeBtn">🌙</button>
     <button id="toggleSummaryBtn">📊 Quick Summary</button>
+    <button id="exportBtn">📤 Export CSV</button>
   </div>
 </header>
 
@@ -137,103 +81,98 @@ document.addEventListener("DOMContentLoaded", () => {
   let quickSummary = false;
   if(dark) document.body.classList.add("dark");
 
-  const save = () => {
-    localStorage.setItem("incomes", JSON.stringify(incomes));
-    localStorage.setItem("bills", JSON.stringify(bills));
-    localStorage.setItem("dark", JSON.stringify(dark));
-  }
-
+  const save = () => { localStorage.setItem("incomes", JSON.stringify(incomes)); localStorage.setItem("bills", JSON.stringify(bills)); localStorage.setItem("dark", JSON.stringify(dark)); }
   const fmt = v => `$${(parseFloat(v)||0).toFixed(2)}`;
   const badgeClass = t => ({Salary:'salary',Bonus:'bonus',Freelance:'freelance',Other:'other'})[t]||'other';
+
+  function exportCSV() {
+    let csv = "Type,Custom Type,Expected,Actual,Paid,Date,Paid Date,Bill Name,Bill Amount,Bill Due\n";
+    incomes.forEach(i=>{
+      csv+=`${i.type || ''},${i.customType || ''},${i.expected || 0},${i.actual || 0},${i.paid ? 'Yes':'No'},${i.date || ''},${i.paidDate || ''},,,\n`;
+    });
+    bills.forEach(b=>{
+      csv+=`,,, , , , ,${b.name || ''},${b.amount || 0},${b.due || ''},${b.paidDate || ''}\n`;
+    });
+    const blob = new Blob([csv], {type: "text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "paycheck_tracker.csv"; a.click(); URL.revokeObjectURL(url);
+  }
 
   const render = () => {
     const filter = document.getElementById("filterSelect").value;
     const sort = document.getElementById("sortSelect").value;
-
     const incTot = incomes.reduce((t,p)=>t+(+p.actual||0),0);
     const incPaid = incomes.filter(p=>p.paid).reduce((t,p)=>t+(+p.actual||0),0);
     const billTot = bills.reduce((t,b)=>t+(+b.amount||0),0);
     const billPaid = bills.filter(b=>b.paid).reduce((t,b)=>t+(+b.amount||0),0);
     const left = incPaid-billPaid;
-
-    // Summary
     const s=document.getElementById("summary");
-    s.innerHTML = `
-      <strong>Summary</strong><br>
-      💵 <b>Total Income:</b> ${fmt(incTot)} (Paid: ${fmt(incPaid)})<br>
-      📉 <b>Total Bills:</b> ${fmt(billTot)} (Paid: ${fmt(billPaid)})<br>
-      💰 <b>Left After Paid Items:</b> ${fmt(left)}
-    `;
+    s.innerHTML = `<strong>Summary</strong><br>💵 <b>Total Income:</b> ${fmt(incTot)} (Paid: ${fmt(incPaid)})<br>📉 <b>Total Bills:</b> ${fmt(billTot)} (Paid: ${fmt(billPaid)})<br>💰 <b>Left After Paid Items:</b> ${fmt(left)}`;
 
-    const sortFn = (a,b) => sort === "amount" ? ((+b.actual||+b.amount||0)-(+a.actual||+a.amount||0)) : (new Date(b.date||b.due||0)-new Date(a.date||a.due||0));
-    const filterFn = a => filter==="all"||filter==="paid"&&a.paid||filter==="unpaid"&&!a.paid;
+    const sortFn = (a,b)=>sort==="amount"?((+b.actual||+b.amount||0)-(+a.actual||+a.amount||0)):(new Date(b.date||b.due||0)-new Date(a.date||a.due||0));
+    const filterFn = a=>filter==="all"||filter==="paid"&&a.paid||filter==="unpaid"&&!a.paid;
 
-    // Quick Summary
+    // Quick summary
     if(quickSummary){
-      const payDiv = document.getElementById("paychecks");
-      payDiv.innerHTML = "";
-      const typeTotals = {};
-      incomes.forEach(p=>{const key=p.type+(p.customType?" - "+p.customType:""); typeTotals[key]=(typeTotals[key]||0)+(+p.actual||0)});
-      for(const t in typeTotals){
-        const d=document.createElement("div"); d.className="card";
-        d.innerHTML = `💼 ${t}: ${fmt(typeTotals[t])} <span class="badge ${badgeClass(t.split(' - ')[0])}"></span>`;
-        payDiv.appendChild(d);
-      }
-
-      const billDiv = document.getElementById("bills");
-      billDiv.innerHTML="";
-      bills.forEach(b=>{const d=document.createElement("div");d.className="card"; d.innerHTML=`🧾 ${b.name||"Bill"}: ${fmt(b.amount||0)} <span class="badge bill"></span>`; billDiv.appendChild(d)});
+      const payDiv=document.getElementById("paychecks"); payDiv.innerHTML="";
+      const typeTotals={}; incomes.forEach(p=>{const key=p.type+(p.customType?" - "+p.customType:""); typeTotals[key]=(typeTotals[key]||0)+(+p.actual||0)});
+      for(const t in typeTotals){const d=document.createElement("div"); d.className="card"; d.innerHTML=`💼 ${t}: ${fmt(typeTotals[t])} <span class="badge ${badgeClass(t.split(' - ')[0])}"></span>`; payDiv.appendChild(d);}
+      const billDiv=document.getElementById("bills"); billDiv.innerHTML=""; bills.forEach(b=>{const d=document.createElement("div");d.className="card"; d.innerHTML=`🧾 ${b.name||"Bill"}: ${fmt(b.amount||0)} <span class="badge bill"></span>`; billDiv.appendChild(d);});
       return;
     }
 
-    // Full view for incomes
-    const payDiv = document.getElementById("paychecks"); payDiv.innerHTML="";
+    // Full Incomes
+    const payDiv=document.getElementById("paychecks"); payDiv.innerHTML="";
     incomes.filter(filterFn).sort(sortFn).forEach((p,index)=>{
-      const d = document.createElement("div"); d.className="card "+(p.paid?"paid":"unpaid");
+      const d=document.createElement("div"); d.className="card "+(p.paid?"paid":"unpaid");
       d.innerHTML=`
         <div class="input-row"><span class="icon">💵</span>
           <input type="text" placeholder="Actual Amount ($)" value="${p.actual||''}">
           <input type="checkbox" ${p.paid?"checked":""}>
+          <select>
+            <option ${p.type==="Salary"?"selected":""}>Salary</option>
+            <option ${p.type==="Bonus"?"selected":""}>Bonus</option>
+            <option ${p.type==="Freelance"?"selected":""}>Freelance</option>
+            <option ${p.type==="Other"?"selected":""}>Other</option>
+          </select>
           <span class="badge ${badgeClass(p.type)}">${p.type}</span>
         </div>
         <div class="input-row"><span class="icon">💼</span>
-          <input type="text" placeholder="Custom Type" value="${p.customType||""}">
+          <input type="text" placeholder="Custom Type (Optional)" value="${p.customType||""}">
         </div>
         <div class="input-row"><span class="icon">📅</span>
           <input type="date" value="${p.date||""}">
         </div>
         <div class="input-row"><span class="icon">💲</span>
-          <input type="text" placeholder="Expected Amount ($)" value="${p.expected||""}">
+          <input type="text" placeholder="Expected Amount ($)" value="${p.expected||''}">
         </div>
         <div class="input-row"><span class="icon">📆</span>
           <input type="date" value="${p.paidDate||""}" ${!p.paid?"disabled":""}>
         </div>
-        <div>Difference: ${fmt((+p.actual||0)-(+p.expected||0))}</div>
+        <div>Difference: $${((+p.actual||0)-(+p.expected||0)).toFixed(2)}</div>
         <button class="deleteBtn">🗑️ Remove</button>
       `;
-      const [r1,r2,r3,r4,r5,del] = d.children;
-      const act = r1.querySelector("input[type=text]"); const chk = r1.querySelector("input[type=checkbox]");
-      const ct = r2.querySelector("input"); const dt = r3.querySelector("input"); const exp = r4.querySelector("input"); const pd = r5.querySelector("input");
-
-      // Amount input formatting
-      act.oninput=e=>act.value = act.value.replace(/[^0-9.]/g,"");
-      act.onblur=e=>{p.actual=parseFloat(act.value)||0; act.value=fmt(p.actual); render();};
-      exp.oninput=e=>exp.value = exp.value.replace(/[^0-9.]/g,"");
-      exp.onblur=e=>{p.expected=parseFloat(exp.value)||0; exp.value=fmt(p.expected); render();};
-
-      chk.onchange=e=>{p.paid=chk.checked;if(!p.paid)p.paidDate=""; pd.disabled=!p.paid; render();};
+      const [r1,r2,r3,r4,r5,del]=d.children;
+      const act=r1.querySelector("input[type=text]"); const chk=r1.querySelector("input[type=checkbox]"); const typeSel=r1.querySelector("select");
+      const ct=r2.querySelector("input"); const dt=r3.querySelector("input"); const exp=r4.querySelector("input"); const pd=r5.querySelector("input");
+      // Amount formatting
+      act.oninput=e=>act.value=act.value.replace(/[^0-9.]/g,"");
+      act.onblur=e=>{p.actual=parseFloat(act.value)||0; act.value=fmt(p.actual); render();}
+      exp.oninput=e=>exp.value=exp.value.replace(/[^0-9.]/g,"");
+      exp.onblur=e=>{p.expected=parseFloat(exp.value)||0; exp.value=fmt(p.expected); render();}
+      chk.onchange=e=>{p.paid=chk.checked; if(!p.paid)p.paidDate=""; pd.disabled=!p.paid; render();}
+      typeSel.onchange=e=>{p.type=typeSel.value; render();}
       ct.oninput=e=>p.customType=ct.value;
       dt.oninput=e=>p.date=dt.value;
       pd.oninput=e=>p.paidDate=pd.value;
-      del.onclick=e=>{incomes.splice(index,1); render();};
-
+      del.onclick=e=>{incomes.splice(index,1); render();}
       payDiv.appendChild(d);
     });
 
-    // Bills
-    const billDiv = document.getElementById("bills"); billDiv.innerHTML="";
+    // Full Bills
+    const billDiv=document.getElementById("bills"); billDiv.innerHTML="";
     bills.filter(filterFn).sort(sortFn).forEach((b,index)=>{
-      const d = document.createElement("div"); d.className="card "+(b.paid?"paid":"unpaid");
+      const d=document.createElement("div"); d.className="card "+(b.paid?"paid":"unpaid");
       d.innerHTML=`
         <div class="input-row"><span class="icon">💵</span>
           <input type="text" placeholder="Amount Due ($)" value="${b.amount||''}">
@@ -251,18 +190,16 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <button class="deleteBtn">🗑️ Remove</button>
       `;
-      const [r1,r2,r3,r4,del] = d.children;
-      const am = r1.querySelector("input[type=text]"); const chk = r1.querySelector("input[type=checkbox]");
-      const nm = r2.querySelector("input"); const du = r3.querySelector("input"); const pd = r4.querySelector("input");
-
-      am.oninput=e=>am.value = am.value.replace(/[^0-9.]/g,"");
-      am.onblur=e=>{b.amount=parseFloat(am.value)||0; am.value=fmt(b.amount); render();};
-      chk.onchange=e=>{b.paid=chk.checked;if(!b.paid)b.paidDate=""; pd.disabled=!b.paid; render();};
+      const [r1,r2,r3,r4,del]=d.children;
+      const am=r1.querySelector("input[type=text]"); const chk=r1.querySelector("input[type=checkbox]");
+      const nm=r2.querySelector("input"); const du=r3.querySelector("input"); const pd=r4.querySelector("input");
+      am.oninput=e=>am.value=am.value.replace(/[^0-9.]/g,"");
+      am.onblur=e=>{b.amount=parseFloat(am.value)||0; am.value=fmt(b.amount); render();}
+      chk.onchange=e=>{b.paid=chk.checked;if(!b.paid)b.paidDate=""; pd.disabled=!b.paid; render();}
       nm.oninput=e=>b.name=nm.value;
       du.oninput=e=>b.due=du.value;
       pd.oninput=e=>b.paidDate=pd.value;
-      del.onclick=e=>{bills.splice(index,1); render();};
-
+      del.onclick=e=>{bills.splice(index,1); render();}
       billDiv.appendChild(d);
     });
 
@@ -271,6 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("toggleThemeBtn").onclick=()=>{dark=!dark;document.body.classList.toggle("dark"); render();};
   document.getElementById("toggleSummaryBtn").onclick=()=>{quickSummary=!quickSummary; render();};
+  document.getElementById("exportBtn").onclick=exportCSV;
   document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",date:"",expected:0,actual:0,paid:false,paidDate:""}); render();};
   document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paid:false,paidDate:""}); render();};
   document.getElementById("filterSelect").onchange=render;
