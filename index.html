@@ -52,7 +52,7 @@ button {
   margin:12px 0;
   box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
-input {
+input, select {
   width:100%;
   box-sizing:border-box;
   padding:8px;
@@ -77,8 +77,8 @@ input {
 
 <div class="card summary" id="summary"></div>
 
-<h3>Paychecks</h3>
-<button id="addPaycheckBtn">➕ Add Paycheck</button>
+<h3>Income</h3>
+<button id="addIncomeBtn">➕ Add Income</button>
 <div id="paychecks"></div>
 
 <h3>Bills</h3>
@@ -88,42 +88,74 @@ input {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  let paychecks = JSON.parse(localStorage.getItem("paychecks")) || [];
+  let incomes = JSON.parse(localStorage.getItem("incomes")) || [];
   let bills = JSON.parse(localStorage.getItem("bills")) || [];
   let dark = JSON.parse(localStorage.getItem("dark")) || false;
 
   if (dark) document.body.classList.add("dark");
 
   const save = () => {
-    localStorage.setItem("paychecks", JSON.stringify(paychecks));
+    localStorage.setItem("incomes", JSON.stringify(incomes));
     localStorage.setItem("bills", JSON.stringify(bills));
     localStorage.setItem("dark", JSON.stringify(dark));
   };
 
-  const render = () => {
-    const income = paychecks.reduce((t, p) => t + (+p.actual || 0), 0);
-    const expenses = bills.reduce((t, b) => t + (+b.amount || 0), 0);
-    document.getElementById("summary").innerText =
-      `Monthly Income: $${income.toFixed(2)} | Bills: $${expenses.toFixed(2)} | Left: $${(income - expenses).toFixed(2)}`;
+  const formatCurrency = (value) => {
+    const num = parseFloat(value) || 0;
+    return `$${num.toFixed(2)}`;
+  };
 
-    // Render paychecks
+  const render = () => {
+    const totalIncome = incomes.reduce((t, p) => t + (+p.actual || 0), 0);
+    const totalBills = bills.reduce((t, b) => t + (+b.amount || 0), 0);
+    document.getElementById("summary").innerText =
+      `Total Income: ${formatCurrency(totalIncome)} | Bills: ${formatCurrency(totalBills)} | Left: ${formatCurrency(totalIncome - totalBills)}`;
+
+    // Render incomes
     const payDiv = document.getElementById("paychecks");
     payDiv.innerHTML = "";
-    paychecks.forEach((p, i) => {
+    incomes.forEach((p, i) => {
       const div = document.createElement("div");
       div.className = "card";
       div.innerHTML = `
+        <select>
+          <option value="Salary"${p.type === "Salary" ? " selected" : ""}>Salary</option>
+          <option value="Bonus"${p.type === "Bonus" ? " selected" : ""}>Bonus</option>
+          <option value="Freelance"${p.type === "Freelance" ? " selected" : ""}>Freelance</option>
+          <option value="Other"${p.type === "Other" ? " selected" : ""}>Other</option>
+        </select>
         <input type="date" value="${p.date || ""}">
-        <input type="number" placeholder="Expected Amount" value="${p.expected || ""}">
-        <input type="number" placeholder="Actual Amount" value="${p.actual || ""}">
-        <div>Difference: $${((+p.actual || 0) - (+p.expected || 0)).toFixed(2)}</div>
+        <input type="text" placeholder="Expected Amount ($)" value="${p.expected ? formatCurrency(p.expected) : ""}">
+        <input type="text" placeholder="Actual Amount ($)" value="${p.actual ? formatCurrency(p.actual) : ""}">
+        <div>Difference: ${formatCurrency((+p.actual || 0) - (+p.expected || 0))}</div>
         <button class="deleteBtn">🗑️ Remove</button>
       `;
-      const [dateInput, expectedInput, actualInput, , delBtn] = div.children;
-      dateInput.addEventListener("input", e => { p.date = e.target.value; save(); });
-      expectedInput.addEventListener("input", e => { p.expected = e.target.value; save(); render(); });
-      actualInput.addEventListener("input", e => { p.actual = e.target.value; save(); render(); });
-      delBtn.addEventListener("click", () => { paychecks.splice(i, 1); save(); render(); });
+      const [typeSelect, dateInput, expectedInput, actualInput, , delBtn] = div.children;
+
+      typeSelect.onchange = e => { p.type = e.target.value; save(); };
+      dateInput.oninput = e => { p.date = e.target.value; save(); };
+      
+      const handleCurrencyInput = (input, key) => {
+        input.addEventListener("focus", () => {
+          input.value = p[key] || "";
+        });
+        input.addEventListener("blur", () => {
+          p[key] = parseFloat(input.value.replace(/[^0-9.]/g, "")) || 0;
+          input.value = formatCurrency(p[key]);
+          save();
+          render();
+        });
+        input.addEventListener("input", () => {
+          // allow continuous editing (fixes keyboard disappearing)
+          input.value = input.value.replace(/[^0-9.]/g, "");
+        });
+      };
+
+      handleCurrencyInput(expectedInput, "expected");
+      handleCurrencyInput(actualInput, "actual");
+
+      delBtn.onclick = () => { incomes.splice(i,1); save(); render(); };
+
       payDiv.appendChild(div);
     });
 
@@ -136,34 +168,49 @@ document.addEventListener("DOMContentLoaded", () => {
       div.innerHTML = `
         <input placeholder="Bill Name" value="${b.name || ""}">
         <input type="date" value="${b.due || ""}">
-        <input type="number" placeholder="Amount Due" value="${b.amount || ""}">
+        <input type="text" placeholder="Amount Due ($)" value="${b.amount ? formatCurrency(b.amount) : ""}">
         <button class="deleteBtn">🗑️ Remove</button>
       `;
       const [nameInput, dueInput, amountInput, delBtn] = div.children;
-      nameInput.addEventListener("input", e => { b.name = e.target.value; save(); });
-      dueInput.addEventListener("input", e => { b.due = e.target.value; save(); });
-      amountInput.addEventListener("input", e => { b.amount = e.target.value; save(); render(); });
-      delBtn.addEventListener("click", () => { bills.splice(i, 1); save(); render(); });
+
+      nameInput.oninput = e => { b.name = e.target.value; save(); };
+      dueInput.oninput = e => { b.due = e.target.value; save(); };
+
+      amountInput.addEventListener("focus", () => {
+        amountInput.value = b.amount || "";
+      });
+      amountInput.addEventListener("blur", () => {
+        b.amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, "")) || 0;
+        amountInput.value = formatCurrency(b.amount);
+        save();
+        render();
+      });
+      amountInput.addEventListener("input", () => {
+        amountInput.value = amountInput.value.replace(/[^0-9.]/g, "");
+      });
+
+      delBtn.onclick = () => { bills.splice(i,1); save(); render(); };
       billDiv.appendChild(div);
     });
   };
 
-  // Button listeners
-  document.getElementById("toggleThemeBtn").addEventListener("click", () => {
+  document.getElementById("toggleThemeBtn").onclick = () => {
     dark = !dark;
     document.body.classList.toggle("dark");
     save();
-  });
-  document.getElementById("addPaycheckBtn").addEventListener("click", () => {
-    paychecks.push({ date: "", expected: "", actual: "" });
+  };
+
+  document.getElementById("addIncomeBtn").onclick = () => {
+    incomes.push({ type: "Salary", date: "", expected: "", actual: "" });
     save();
     render();
-  });
-  document.getElementById("addBillBtn").addEventListener("click", () => {
+  };
+
+  document.getElementById("addBillBtn").onclick = () => {
     bills.push({ name: "", due: "", amount: "" });
     save();
     render();
-  });
+  };
 
   render();
 });
