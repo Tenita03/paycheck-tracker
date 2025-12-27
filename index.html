@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Paycheck Tracker</title>
 <style>
 :root {
@@ -10,62 +10,54 @@
   --card:#fff;
   --text:#000;
   --accent:#4CAF50;
+  --paid:#e6ffe6;
+  --unpaid:#ffe6e6;
+  --income-bar:#4CAF50;
+  --bill-bar:#ff3b30;
 }
 body.dark {
   --bg:#000;
   --card:#1c1c1e;
   --text:#fff;
+  --paid:#173d17;
+  --unpaid:#3d1717;
+  --income-bar:#5efc82;
+  --bill-bar:#ff6b60;
 }
 body {
   margin:0;
-  padding:12px;
   background:var(--bg);
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;
 }
 header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
+  position:sticky;top:0;z-index:20;
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--bg);padding:12px;border-bottom:1px solid rgba(0,0,0,.1);
 }
 button {
-  background:var(--accent);
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  padding:8px 14px;
-  font-size:16px;
-  cursor:pointer;
-}
-.deleteBtn {
-  background:#ff3b30;
-  padding:5px 10px;
-  font-size:14px;
-  margin-top:6px;
-  border-radius:10px;
+  background:var(--accent);color:#fff;border:none;border-radius:12px;
+  padding:8px 14px;font-size:16px;cursor:pointer;
 }
 .card {
-  background:var(--card);
-  border-radius:16px;
-  padding:14px;
-  margin:12px 0;
-  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  background:var(--card);border-radius:16px;padding:14px;margin:12px;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);transition:background .3s;
 }
-input, select {
-  width:100%;
-  box-sizing:border-box;
-  padding:8px;
-  margin:6px 0;
-  font-size:16px;
-  border-radius:10px;
-  border:1px solid #ccc;
+.card.paid{background:var(--paid);}
+.card.unpaid{background:var(--unpaid);}
+.deleteBtn{background:#ff3b30;color:#fff;border:none;border-radius:10px;
+  padding:5px 10px;margin-top:6px;font-size:14px;}
+input,select{width:100%;box-sizing:border-box;padding:8px;margin:6px 0;
+  font-size:16px;border-radius:10px;border:1px solid #ccc;}
+.summary-container{position:sticky;top:60px;z-index:10;padding:0 12px;}
+.summary{
+  background:var(--card);border-radius:16px;padding:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;
 }
-.summary {
-  font-size:18px;
-  font-weight:600;
-  padding:10px;
-}
+.progress-bar{height:6px;border-radius:3px;background:rgba(0,0,0,0.1);
+  margin:4px 0 8px;overflow:hidden;}
+.progress-fill{height:100%;width:0;transition:width .7s ease;}
+h3{margin:12px;}
 </style>
 </head>
 
@@ -75,144 +67,127 @@ input, select {
   <button id="toggleThemeBtn">🌙</button>
 </header>
 
-<div class="card summary" id="summary"></div>
+<div class="summary-container">
+  <div class="summary" id="summary"></div>
+</div>
 
 <h3>Income</h3>
-<button id="addIncomeBtn">➕ Add Income</button>
+<button id="addIncomeBtn" style="margin-left:12px;">➕ Add Income</button>
 <div id="paychecks"></div>
 
 <h3>Bills</h3>
-<button id="addBillBtn">➕ Add Bill</button>
+<button id="addBillBtn" style="margin-left:12px;">➕ Add Bill</button>
 <div id="bills"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded",()=>{
+let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
+let bills=JSON.parse(localStorage.getItem("bills"))||[];
+let dark=JSON.parse(localStorage.getItem("dark"))||false;
+if(dark)document.body.classList.add("dark");
 
-  let incomes = JSON.parse(localStorage.getItem("incomes")) || [];
-  let bills = JSON.parse(localStorage.getItem("bills")) || [];
-  let dark = JSON.parse(localStorage.getItem("dark")) || false;
+const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes));
+  localStorage.setItem("bills",JSON.stringify(bills));
+  localStorage.setItem("dark",JSON.stringify(dark));};
 
-  if (dark) document.body.classList.add("dark");
+const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
+const animateVal=(el,s,e,d=600)=>{const t0=performance.now();
+  const step=t=>{const p=Math.min((t-t0)/d,1);el.textContent=fmt(s+(e-s)*p);
+    if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);};
 
-  const save = () => {
-    localStorage.setItem("incomes", JSON.stringify(incomes));
-    localStorage.setItem("bills", JSON.stringify(bills));
-    localStorage.setItem("dark", JSON.stringify(dark));
-  };
+function render(){
+  const incTot=incomes.reduce((t,p)=>t+(+p.actual||0),0);
+  const incPaid=incomes.filter(p=>p.paid).reduce((t,p)=>t+(+p.actual||0),0);
+  const billTot=bills.reduce((t,b)=>t+(+b.amount||0),0);
+  const billPaid=bills.filter(b=>b.paid).reduce((t,b)=>t+(+b.amount||0),0);
+  const left=incPaid-billPaid;
+  const incPerc=incTot?incPaid/incTot*100:0;
+  const billPerc=billTot?billPaid/billTot*100:0;
 
-  const formatCurrency = (value) => {
-    const num = parseFloat(value) || 0;
-    return `$${num.toFixed(2)}`;
-  };
+  const sEl=document.getElementById("summary");
+  const prev={i:+sEl.dataset.i||0,b:+sEl.dataset.b||0,l:+sEl.dataset.l||0};
+  sEl.dataset.i=incPaid.toFixed(2);sEl.dataset.b=billPaid.toFixed(2);sEl.dataset.l=left.toFixed(2);
+  sEl.innerHTML=`
+  <strong>Summary</strong><br>
+  💵 <b>Total Income:</b> <span id="incVal">${fmt(prev.i)}</span>
+  <small>(Paid: ${fmt(incPaid)} / Total: ${fmt(incTot)})</small>
+  <div class="progress-bar"><div id="incBar" class="progress-fill" style="background:var(--income-bar)"></div></div>
+  📉 <b>Total Bills:</b> <span id="billVal">${fmt(prev.b)}</span>
+  <small>(Paid: ${fmt(billPaid)} / Total: ${fmt(billTot)})</small>
+  <div class="progress-bar"><div id="billBar" class="progress-fill" style="background:var(--bill-bar)"></div></div>
+  💰 <b>Left After Paid Items:</b> <span id="leftVal">${fmt(prev.l)}</span>`;
+  animateVal(document.getElementById("incVal"),prev.i,incTot,700);
+  animateVal(document.getElementById("billVal"),prev.b,billTot,700);
+  animateVal(document.getElementById("leftVal"),prev.l,left,700);
+  requestAnimationFrame(()=>{document.getElementById("incBar").style.width=incPerc+"%";
+    document.getElementById("billBar").style.width=billPerc+"%";});
 
-  const render = () => {
-    const totalIncome = incomes.reduce((t, p) => t + (+p.actual || 0), 0);
-    const totalBills = bills.reduce((t, b) => t + (+b.amount || 0), 0);
-    document.getElementById("summary").innerText =
-      `Total Income: ${formatCurrency(totalIncome)} | Bills: ${formatCurrency(totalBills)} | Left: ${formatCurrency(totalIncome - totalBills)}`;
+  const payDiv=document.getElementById("paychecks");payDiv.innerHTML="";
+  incomes.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="card "+(p.paid?"paid":"unpaid");
+    d.innerHTML=`
+      <select>
+        <option ${p.type==="Salary"?"selected":""}>Salary</option>
+        <option ${p.type==="Bonus"?"selected":""}>Bonus</option>
+        <option ${p.type==="Freelance"?"selected":""}>Freelance</option>
+        <option ${p.type==="Other"?"selected":""}>Other</option>
+      </select>
+      <input type="text" placeholder="Custom Type (optional)" value="${p.customType||""}">
+      <input type="date" value="${p.date||""}">
+      <input type="text" placeholder="Expected Amount ($)" value="${p.expected?fmt(p.expected):""}">
+      <input type="text" placeholder="Actual Amount ($)" value="${p.actual?fmt(p.actual):""}">
+      <label><input type="checkbox" ${p.paid?"checked":""}> Paid</label>
+      <input type="date" value="${p.paidDate||""}" ${!p.paid?"disabled":""}>
+      <div>Difference: ${fmt((+p.actual||0)-(+p.expected||0))}</div>
+      <button class="deleteBtn">🗑️ Remove</button>`;
+    const [sel,ct,dt,exp,act,lab,pd,,del]=d.children,chk=lab.querySelector("input");
+    sel.onchange=e=>{p.type=e.target.value;save();};
+    ct.oninput=e=>{p.customType=e.target.value;save();};
+    dt.oninput=e=>{p.date=e.target.value;save();};
+    const h=(inp,k)=>{inp.onfocus=()=>inp.value=p[k]||"";
+      inp.oninput=()=>inp.value=inp.value.replace(/[^0-9.]/g,"");
+      inp.onblur=()=>{p[k]=parseFloat(inp.value.replace(/[^0-9.]/g,""))||0;inp.value=fmt(p[k]);save();render();};};
+    h(exp,"expected");h(act,"actual");
+    chk.onchange=()=>{p.paid=chk.checked;if(!p.paid)p.paidDate="";pd.disabled=!p.paid;save();render();};
+    pd.oninput=e=>{p.paidDate=e.target.value;save();};
+    del.onclick=()=>{incomes.splice(i,1);save();render();};
+    payDiv.appendChild(d);
+  });
 
-    // Render incomes
-    const payDiv = document.getElementById("paychecks");
-    payDiv.innerHTML = "";
-    incomes.forEach((p, i) => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <select>
-          <option value="Salary"${p.type === "Salary" ? " selected" : ""}>Salary</option>
-          <option value="Bonus"${p.type === "Bonus" ? " selected" : ""}>Bonus</option>
-          <option value="Freelance"${p.type === "Freelance" ? " selected" : ""}>Freelance</option>
-          <option value="Other"${p.type === "Other" ? " selected" : ""}>Other</option>
-        </select>
-        <input type="date" value="${p.date || ""}">
-        <input type="text" placeholder="Expected Amount ($)" value="${p.expected ? formatCurrency(p.expected) : ""}">
-        <input type="text" placeholder="Actual Amount ($)" value="${p.actual ? formatCurrency(p.actual) : ""}">
-        <div>Difference: ${formatCurrency((+p.actual || 0) - (+p.expected || 0))}</div>
-        <button class="deleteBtn">🗑️ Remove</button>
-      `;
-      const [typeSelect, dateInput, expectedInput, actualInput, , delBtn] = div.children;
+  const billDiv=document.getElementById("bills");billDiv.innerHTML="";
+  bills.forEach((b,i)=>{
+    const d=document.createElement("div");
+    d.className="card "+(b.paid?"paid":"unpaid");
+    d.innerHTML=`
+      <input placeholder="Bill Name" value="${b.name||""}">
+      <input type="date" value="${b.due||""}">
+      <input type="text" placeholder="Amount Due ($)" value="${b.amount?fmt(b.amount):""}">
+      <label><input type="checkbox" ${b.paid?"checked":""}> Paid</label>
+      <input type="date" value="${b.paidDate||""}" ${!b.paid?"disabled":""}>
+      <button class="deleteBtn">🗑️ Remove</button>`;
+    const [nm,du,am,lab,pd,del]=d.children,chk=lab.querySelector("input");
+    nm.oninput=e=>{b.name=e.target.value;save();};
+    du.oninput=e=>{b.due=e.target.value;save();};
+    am.onfocus=()=>am.value=b.amount||"";
+    am.oninput=()=>am.value=am.value.replace(/[^0-9.]/g,"");
+    am.onblur=()=>{b.amount=parseFloat(am.value.replace(/[^0-9.]/g,""))||0;am.value=fmt(b.amount);save();render();};
+    chk.onchange=()=>{b.paid=chk.checked;if(!b.paid)b.paidDate="";pd.disabled=!b.paid;save();render();};
+    pd.oninput=e=>{b.paidDate=e.target.value;save();};
+    del.onclick=()=>{bills.splice(i,1);save();render();};
+    billDiv.appendChild(d);
+  });
+}
 
-      typeSelect.onchange = e => { p.type = e.target.value; save(); };
-      dateInput.oninput = e => { p.date = e.target.value; save(); };
-      
-      const handleCurrencyInput = (input, key) => {
-        input.addEventListener("focus", () => {
-          input.value = p[key] || "";
-        });
-        input.addEventListener("blur", () => {
-          p[key] = parseFloat(input.value.replace(/[^0-9.]/g, "")) || 0;
-          input.value = formatCurrency(p[key]);
-          save();
-          render();
-        });
-        input.addEventListener("input", () => {
-          // allow continuous editing (fixes keyboard disappearing)
-          input.value = input.value.replace(/[^0-9.]/g, "");
-        });
-      };
-
-      handleCurrencyInput(expectedInput, "expected");
-      handleCurrencyInput(actualInput, "actual");
-
-      delBtn.onclick = () => { incomes.splice(i,1); save(); render(); };
-
-      payDiv.appendChild(div);
-    });
-
-    // Render bills
-    const billDiv = document.getElementById("bills");
-    billDiv.innerHTML = "";
-    bills.forEach((b, i) => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <input placeholder="Bill Name" value="${b.name || ""}">
-        <input type="date" value="${b.due || ""}">
-        <input type="text" placeholder="Amount Due ($)" value="${b.amount ? formatCurrency(b.amount) : ""}">
-        <button class="deleteBtn">🗑️ Remove</button>
-      `;
-      const [nameInput, dueInput, amountInput, delBtn] = div.children;
-
-      nameInput.oninput = e => { b.name = e.target.value; save(); };
-      dueInput.oninput = e => { b.due = e.target.value; save(); };
-
-      amountInput.addEventListener("focus", () => {
-        amountInput.value = b.amount || "";
-      });
-      amountInput.addEventListener("blur", () => {
-        b.amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, "")) || 0;
-        amountInput.value = formatCurrency(b.amount);
-        save();
-        render();
-      });
-      amountInput.addEventListener("input", () => {
-        amountInput.value = amountInput.value.replace(/[^0-9.]/g, "");
-      });
-
-      delBtn.onclick = () => { bills.splice(i,1); save(); render(); };
-      billDiv.appendChild(div);
-    });
-  };
-
-  document.getElementById("toggleThemeBtn").onclick = () => {
-    dark = !dark;
-    document.body.classList.toggle("dark");
-    save();
-  };
-
-  document.getElementById("addIncomeBtn").onclick = () => {
-    incomes.push({ type: "Salary", date: "", expected: "", actual: "" });
-    save();
-    render();
-  };
-
-  document.getElementById("addBillBtn").onclick = () => {
-    bills.push({ name: "", due: "", amount: "" });
-    save();
-    render();
-  };
-
-  render();
+document.getElementById("toggleThemeBtn").onclick=()=>{dark=!dark;
+  document.body.classList.toggle("dark");save();};
+document.getElementById("addIncomeBtn").onclick=()=>{
+  incomes.push({type:"Salary",customType:"",date:"",expected:"",actual:"",paid:false,paidDate:""});
+  save();render();};
+document.getElementById("addBillBtn").onclick=()=>{
+  bills.push({name:"",due:"",amount:"",paid:false,paidDate:""});
+  save();render();};
+render();
 });
 </script>
 </body>
