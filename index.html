@@ -111,3 +111,62 @@ document.addEventListener("DOMContentLoaded", () => {
     payDiv.innerHTML = "";
     paychecks.forEach((p, i) => {
       const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <input type="date" value="${p.date || ""}">
+        <input type="number" placeholder="Expected Amount" value="${p.expected || ""}">
+        <input type="number" placeholder="Actual Amount" value="${p.actual || ""}">
+        <div>Difference: $${((+p.actual || 0) - (+p.expected || 0)).toFixed(2)}</div>
+        <button class="deleteBtn">🗑️ Remove</button>
+      `;
+      const [dateInput, expectedInput, actualInput, , delBtn] = div.children;
+      dateInput.addEventListener("input", e => { p.date = e.target.value; save(); });
+      expectedInput.addEventListener("input", e => { p.expected = e.target.value; save(); render(); });
+      actualInput.addEventListener("input", e => { p.actual = e.target.value; save(); render(); });
+      delBtn.addEventListener("click", () => { paychecks.splice(i, 1); save(); render(); });
+      payDiv.appendChild(div);
+    });
+
+    // Render bills
+    const billDiv = document.getElementById("bills");
+    billDiv.innerHTML = "";
+    bills.forEach((b, i) => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <input placeholder="Bill Name" value="${b.name || ""}">
+        <input type="date" value="${b.due || ""}">
+        <input type="number" placeholder="Amount Due" value="${b.amount || ""}">
+        <button class="deleteBtn">🗑️ Remove</button>
+      `;
+      const [nameInput, dueInput, amountInput, delBtn] = div.children;
+      nameInput.addEventListener("input", e => { b.name = e.target.value; save(); });
+      dueInput.addEventListener("input", e => { b.due = e.target.value; save(); });
+      amountInput.addEventListener("input", e => { b.amount = e.target.value; save(); render(); });
+      delBtn.addEventListener("click", () => { bills.splice(i, 1); save(); render(); });
+      billDiv.appendChild(div);
+    });
+  };
+
+  // Button listeners
+  document.getElementById("toggleThemeBtn").addEventListener("click", () => {
+    dark = !dark;
+    document.body.classList.toggle("dark");
+    save();
+  });
+  document.getElementById("addPaycheckBtn").addEventListener("click", () => {
+    paychecks.push({ date: "", expected: "", actual: "" });
+    save();
+    render();
+  });
+  document.getElementById("addBillBtn").addEventListener("click", () => {
+    bills.push({ name: "", due: "", amount: "" });
+    save();
+    render();
+  });
+
+  render();
+});
+</script>
+</body>
+</html>
