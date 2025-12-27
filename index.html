@@ -188,11 +188,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Full view for incomes
     const payDiv = document.getElementById("paychecks"); payDiv.innerHTML="";
-    incomes.filter(filterFn).sort(sortFn).forEach(p=>{
+    incomes.filter(filterFn).sort(sortFn).forEach((p,index)=>{
       const d = document.createElement("div"); d.className="card "+(p.paid?"paid":"unpaid");
       d.innerHTML=`
         <div class="input-row"><span class="icon">💵</span>
-          <input type="text" value="${p.actual||''}">
+          <input type="text" placeholder="Actual Amount ($)" value="${p.actual||''}">
           <input type="checkbox" ${p.paid?"checked":""}>
           <span class="badge ${badgeClass(p.type)}">${p.type}</span>
         </div>
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <input type="date" value="${p.date||""}">
         </div>
         <div class="input-row"><span class="icon">💲</span>
-          <input type="text" value="${p.expected||""}" placeholder="Expected Amount ($)">
+          <input type="text" placeholder="Expected Amount ($)" value="${p.expected||""}">
         </div>
         <div class="input-row"><span class="icon">📆</span>
           <input type="date" value="${p.paidDate||""}" ${!p.paid?"disabled":""}>
@@ -214,23 +214,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const [r1,r2,r3,r4,r5,del] = d.children;
       const act = r1.querySelector("input[type=text]"); const chk = r1.querySelector("input[type=checkbox]");
       const ct = r2.querySelector("input"); const dt = r3.querySelector("input"); const exp = r4.querySelector("input"); const pd = r5.querySelector("input");
-      act.oninput=e=>p.actual=parseFloat(act.value.replace(/[^0-9.]/g,""))||0;
-      chk.onchange=e=>{p.paid=chk.checked;if(!p.paid)p.paidDate="";pd.disabled=!p.paid;};
+
+      // Amount input formatting
+      act.oninput=e=>act.value = act.value.replace(/[^0-9.]/g,"");
+      act.onblur=e=>{p.actual=parseFloat(act.value)||0; act.value=fmt(p.actual); render();};
+      exp.oninput=e=>exp.value = exp.value.replace(/[^0-9.]/g,"");
+      exp.onblur=e=>{p.expected=parseFloat(exp.value)||0; exp.value=fmt(p.expected); render();};
+
+      chk.onchange=e=>{p.paid=chk.checked;if(!p.paid)p.paidDate=""; pd.disabled=!p.paid; render();};
       ct.oninput=e=>p.customType=ct.value;
       dt.oninput=e=>p.date=dt.value;
-      exp.oninput=e=>p.expected=parseFloat(exp.value.replace(/[^0-9.]/g,""))||0;
       pd.oninput=e=>p.paidDate=pd.value;
-      del.onclick=e=>{incomes.splice(incomes.indexOf(p),1)};
+      del.onclick=e=>{incomes.splice(index,1); render();};
+
       payDiv.appendChild(d);
     });
 
-    // Full view for bills
+    // Bills
     const billDiv = document.getElementById("bills"); billDiv.innerHTML="";
-    bills.filter(filterFn).sort(sortFn).forEach(b=>{
+    bills.filter(filterFn).sort(sortFn).forEach((b,index)=>{
       const d = document.createElement("div"); d.className="card "+(b.paid?"paid":"unpaid");
       d.innerHTML=`
         <div class="input-row"><span class="icon">💵</span>
-          <input type="text" value="${b.amount||''}">
+          <input type="text" placeholder="Amount Due ($)" value="${b.amount||''}">
           <input type="checkbox" ${b.paid?"checked":""}>
           <span class="badge bill">Bill</span>
         </div>
@@ -248,20 +254,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const [r1,r2,r3,r4,del] = d.children;
       const am = r1.querySelector("input[type=text]"); const chk = r1.querySelector("input[type=checkbox]");
       const nm = r2.querySelector("input"); const du = r3.querySelector("input"); const pd = r4.querySelector("input");
-      am.oninput=e=>b.amount=parseFloat(am.value.replace(/[^0-9.]/g,""))||0;
-      chk.onchange=e=>{b.paid=chk.checked;if(!b.paid)b.paidDate="";pd.disabled=!b.paid;};
+
+      am.oninput=e=>am.value = am.value.replace(/[^0-9.]/g,"");
+      am.onblur=e=>{b.amount=parseFloat(am.value)||0; am.value=fmt(b.amount); render();};
+      chk.onchange=e=>{b.paid=chk.checked;if(!b.paid)b.paidDate=""; pd.disabled=!b.paid; render();};
       nm.oninput=e=>b.name=nm.value;
       du.oninput=e=>b.due=du.value;
       pd.oninput=e=>b.paidDate=pd.value;
-      del.onclick=e=>{bills.splice(bills.indexOf(b),1)};
+      del.onclick=e=>{bills.splice(index,1); render();};
+
       billDiv.appendChild(d);
     });
 
     save();
   }
 
-  document.getElementById("toggleThemeBtn").onclick=()=>{dark=!dark;document.body.classList.toggle("dark");save();render();};
-  document.getElementById("toggleSummaryBtn").onclick=()=>{quickSummary=!quickSummary;render();};
+  document.getElementById("toggleThemeBtn").onclick=()=>{dark=!dark;document.body.classList.toggle("dark"); render();};
+  document.getElementById("toggleSummaryBtn").onclick=()=>{quickSummary=!quickSummary; render();};
   document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",date:"",expected:0,actual:0,paid:false,paidDate:""}); render();};
   document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paid:false,paidDate:""}); render();};
   document.getElementById("filterSelect").onchange=render;
