@@ -149,4 +149,11 @@ function render(){
       <input type="number" placeholder="Amount Due" value="${b.amount||''}" onchange="bills[${i}].amount=this.value;save();render()">
       <input type="number" placeholder="Amount Paid" value="${b.paid||''}" onchange="bills[${i}].paid=this.value;save()">
       <label><input type="checkbox" ${b.paid>=b.amount?"checked":""} disabled> Paid</label>
-    </
+    </div>
+  `).join("");
+}
+
+render();
+</script>
+</body>
+</html>
