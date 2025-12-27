@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Paycheck & Bills Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 20px;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #eaeaea;
+    }
+    input[type="number"], input[type="date"], input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 8px 15px;
+      margin: 5px 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>💰 Paycheck & Bills Tracker</h1>
+
+<!-- PAYCHECK SECTION -->
+<h2>Paycheck Tracker</h2>
+<button onclick="addPaycheck()">➕ Add Paycheck</button>
+
+<table id="paycheckTable">
+  <tr>
+    <th>Pay Date</th>
+    <th>Expected Amount</th>
+    <th>Actual Amount</th>
+    <th>Difference</th>
+    <th>Delete</th>
+  </tr>
+</table>
+
+<!-- BILLS SECTION -->
+<h2>Bills Tracker</h2>
+<button onclick="addBill()">➕ Add Bill</button>
+
+<table id="billTable">
+  <tr>
+    <th>Bill Name</th>
+    <th>Due Date</th>
+    <th>Minimum Due</th>
+    <th>Amount Due</th>
+    <th>Amount Paid</th>
+    <th>Date Paid</th>
+    <th>Paid ✔</th>
+    <th>Delete</th>
+  </tr>
+</table>
+
+<script>
+  let paychecks = JSON.parse(localStorage.getItem("paychecks")) || [];
+  let bills = JSON.parse(localStorage.getItem("bills")) || [];
+
+  function saveData() {
+    localStorage.setItem("paychecks", JSON.stringify(paychecks));
+    localStorage.setItem("bills", JSON.stringify(bills));
+  }
+
+  function renderPaychecks() {
+    const table = document.getElementById("paycheckTable");
+    table.innerHTML = table.rows[0].outerHTML;
+
+    paychecks.forEach((p, i) => {
+      const diff = (p.actual || 0) - (p.expected || 0);
+      const row = table.insertRow();
+      row.innerHTML = `
+        <td><input type="date" value="${p.date || ''}" onchange="paychecks[${i}].date=this.value;saveData()"></td>
+        <td><input type="number" value="${p.expected || ''}" onchange="paychecks[${i}].expected=+this.value;saveData();renderPaychecks()"></td>
+        <td><input type="number" value="${p.actual || ''}" onchange="paychecks[${i}].actual=+this.value;saveData();renderPaychecks()"></td>
+        <td>${diff.toFixed(2)}</td>
+        <td><button onclick="paychecks.splice(${i},1);saveData();renderPaychecks()">❌</button></td>
+      `;
+    });
+  }
+
+  function renderBills() {
+    const table = document.getElementById("billTable");
+    table.innerHTML = table.rows[0].outerHTML;
+
+    bills.forEach((b, i) => {
+      const paid = (b.paidAmount || 0) >= (b.amountDue || 0);
+      const row = table.insertRow();
+      row.innerHTML = `
+        <td><input type="text" value="${b.name || ''}" onchange="bills[${i}].name=this.value;saveData()"></td>
+        <td><input type="date" value="${b.dueDate || ''}" onchange="bills[${i}].dueDate=this.value;saveData()"></td>
+        <td><input type="number" value="${b.minDue || ''}" onchange="bills[${i}].minDue=+this.value;saveData()"></td>
+        <td><input type="number" value="${b.amountDue || ''}" onchange="bills[${i}].amountDue=+this.value;saveData();renderBills()"></td>
+        <td><input type="number" value="${b.paidAmount || ''}" onchange="bills[${i}].paidAmount=+this.value;saveData();renderBills()"></td>
+        <td><input type="date" value="${b.datePaid || ''}" onchange="bills[${i}].datePaid=this.value;saveData()"></td>
+        <td><input type="checkbox" ${paid ? "checked" : ""} disabled></td>
+        <td><button onclick="bills.splice(${i},1);saveData();renderBills()">❌</button></td>
+      `;
+    });
+  }
+
+  function addPaycheck() {
+    paychecks.push({});
+    saveData();
+    renderPaychecks();
+  }
+
+  function addBill() {
+    bills.push({});
+    saveData();
+    renderBills();
+  }
+
+  renderPaychecks();
+  renderBills();
+</script>
+
+</body>
+</html>
