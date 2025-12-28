@@ -3,34 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v15 - Pastel</title>
+<title>Paycheck Tracker v17 - Pastel Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
   --bg:#fff7f2;
   --card:#fffbe6;
   --text:#333;
-  --accent:#fdd9a7;
   --caption:#888;
-  --salary:#fff3b3; /* pastel yellow */
-  --bonus:#ffc1d9;  /* pastel pink */
-  --freelance:#b3e0ff; /* pastel blue */
-  --other:#d9b3ff;  /* lavender */
-  --bill:#ffd9d0;   /* pastel peach */
+  --accent:#fdd9a7;
+  --salary:#fff3b3;
+  --bonus:#ffc1d9;
+  --freelance:#b3e0ff;
+  --other:#d9b3ff;
+  --bill:#ffd9d0;
+  --paid-highlight:#b6fcb6;
+  --paid-transition:background 0.6s ease;
   --paid:#e6ffe6;
   --unpaid:#ffe6e6;
 }
-body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif; background:var(--bg); color:var(--text);}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;background:var(--bg);color:var(--text);}
 header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.1);}
 button{background:var(--accent); color:#333; border:none; border-radius:10px; padding:8px 12px; font-size:15px; cursor:pointer;}
 button:hover{opacity:0.9;}
-.card{background:var(--card); border-radius:16px; padding:12px; margin:12px; box-shadow:0 2px 5px rgba(0,0,0,.1);}
+.card{background:var(--card);border-radius:16px;padding:12px;margin:12px;box-shadow:0 2px 5px rgba(0,0,0,.1);transition:var(--paid-transition);}
 .card.paid{background:var(--paid);}
 .card.unpaid{background:var(--unpaid);}
-.deleteBtn{background:#ff9999; color:#333; border:none; border-radius:10px; padding:5px 10px; margin-top:6px; font-size:14px; cursor:pointer;}
+.deleteBtn{background:#ff9999;color:#333;border:none;border-radius:10px;padding:5px 10px;margin-top:6px;font-size:14px;cursor:pointer;}
 .deleteBtn:hover{opacity:0.9;}
 .input-row{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap;}
-.input-row label{font-size:12px; color:var(--caption); width:100%;}
-.input-row input, .input-row select{flex:1; padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px;}
+.input-row label{font-size:12px;color:var(--caption);width:100%;}
+.input-row input,.input-row select{flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;font-size:14px;}
 .badge{padding:2px 6px;border-radius:6px;color:#333;font-size:13px;margin-left:4px;}
 .badge.salary{background:var(--salary);}
 .badge.bonus{background:var(--bonus);}
@@ -42,6 +45,8 @@ button:hover{opacity:0.9;}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin:10px 12px;}
 .filters select{flex:1;min-width:130px;padding:6px;font-size:14px;border-radius:8px;}
 h3{margin:12px;}
+#dashboard{display:none;padding:12px;margin:12px;background:var(--card);border-radius:16px;}
+canvas{max-width:100%;height:200px;}
 @media(max-width:500px){.filters{flex-direction:column;}}
 </style>
 </head>
@@ -70,6 +75,13 @@ h3{margin:12px;}
   </select>
 </div>
 
+<div id="dashboard">
+  <h3>Income by Type</h3>
+  <canvas id="incomeChart"></canvas>
+  <h3>Bills Paid vs Unpaid</h3>
+  <canvas id="billsChart"></canvas>
+</div>
+
 <h3>Income</h3>
 <button id="addIncomeBtn" style="margin-left:12px;">➕ Add Income</button>
 <div id="paychecks"></div>
@@ -85,134 +97,129 @@ document.addEventListener("DOMContentLoaded", () => {
   let quickSummary=false;
 
   const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes)); localStorage.setItem("bills",JSON.stringify(bills));}
-
   const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
   const badgeClass=t=>({Salary:'salary',Bonus:'bonus',Freelance:'freelance',Other:'other'})[t]||'other';
 
   const exportCSV=()=>{
-    let csv="Type,Custom Type,Expected,Actual,Paid,Date Paid,Bill Name,Bill Amount,Date Due,Date Paid\n";
-    incomes.forEach(i=>{csv+=`${i.type||''},${i.customType||''},${i.expected||0},${i.actual||0},${i.paid?'Yes':'No'},${i.paidDate||''},,,,\n`;});
-    bills.forEach(b=>{csv+=`,,, , , ,${b.name||''},${b.amount||0},${b.due||''},${b.paidDate||''}\n`;});
+    let csv="Type,Custom Type,Expected,Actual,Date Paid,Bill Name,Bill Amount,Date Due,Date Paid\n";
+    incomes.forEach(i=>{csv+=`${i.type||''},${i.customType||''},${i.expected||0},${i.actual||0},${i.paidDate||''},,,,\n`;});
+    bills.forEach(b=>{csv+=`,,, , ,${b.name||''},${b.amount||0},${b.due||''},${b.paidDate||''}\n`;});
     const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob);
     const a=document.createElement("a"); a.href=url; a.download="paycheck_tracker.csv"; a.click(); URL.revokeObjectURL(url);
+  }
+
+  let incomeChart=null, billsChart=null;
+
+  const renderCharts=()=>{
+    // Income by type
+    const incomeTypes=['Salary','Bonus','Freelance','Other'];
+    const incomeValues=incomeTypes.map(t=>incomes.filter(i=>i.type===t).reduce((s,i)=>s+(+i.actual||0),0));
+    if(incomeChart) incomeChart.destroy();
+    const ctx1=document.getElementById("incomeChart").getContext("2d");
+    incomeChart=new Chart(ctx1,{
+      type:'bar',
+      data:{
+        labels:incomeTypes,
+        datasets:[{label:'Income by Type',data:incomeValues,backgroundColor:['#fff3b3','#ffc1d9','#b3e0ff','#d9b3ff'] }]
+      },
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'$'+ctx.raw.toFixed(2)}}},scales:{y:{beginAtZero:true}}}
+    });
+
+    // Bills Paid vs Unpaid
+    const paid=bills.filter(b=>b.paidDate).reduce((s,b)=>s+(+b.amount||0),0);
+    const unpaid=bills.filter(b=>!b.paidDate).reduce((s,b)=>s+(+b.amount||0),0);
+    if(billsChart) billsChart.destroy();
+    const ctx2=document.getElementById("billsChart").getContext("2d");
+    billsChart=new Chart(ctx2,{
+      type:'doughnut',
+      data:{
+        labels:['Paid','Unpaid'],
+        datasets:[{data:[paid,unpaid],backgroundColor:['#b6fcb6','#ffd9d0'] }]
+      },
+      options:{responsive:true,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>'$'+ctx.raw.toFixed(2)}}}}
+    });
   }
 
   const render=()=>{
     const filter=document.getElementById("filterSelect").value;
     const sort=document.getElementById("sortSelect").value;
     const incTot=incomes.reduce((t,p)=>t+(+p.actual||0),0);
-    const incPaid=incomes.filter(p=>p.paid).reduce((t,p)=>t+(+p.actual||0),0);
+    const incPaid=incomes.filter(p=>p.paidDate).reduce((t,p)=>t+(+p.actual||0),0);
     const billTot=bills.reduce((t,b)=>t+(+b.amount||0),0);
-    const billPaid=bills.filter(b=>b.paid).reduce((t,b)=>t+(+b.amount||0),0);
+    const billPaid=bills.filter(b=>b.paidDate).reduce((t,b)=>t+(+b.amount||0),0);
     const left=incPaid-billPaid;
-    const s=document.getElementById("summary");
-    s.innerHTML=`<strong>Summary</strong><br>💵 <b>Total Income:</b> ${fmt(incTot)} (Paid: ${fmt(incPaid)})<br>📉 <b>Total Bills:</b> ${fmt(billTot)} (Paid: ${fmt(billPaid)})<br>💰 <b>Left After Paid Items:</b> ${fmt(left)}`;
+    document.getElementById("summary").innerHTML=`<strong>Summary</strong><br>💵 <b>Total Income:</b> ${fmt(incTot)} (Paid: ${fmt(incPaid)})<br>📉 <b>Total Bills:</b> ${fmt(billTot)} (Paid: ${fmt(billPaid)})<br>💰 <b>Left After Paid Items:</b> ${fmt(left)}`;
 
     const sortFn=(a,b)=>sort==="amount"?((+b.actual||+b.amount||0)-(+a.actual||+a.amount||0)):(new Date(b.date||b.due||0)-new Date(a.date||a.due||0));
-    const filterFn=a=>filter==="all"||filter==="paid"&&a.paid||filter==="unpaid"&&!a.paid;
-
-    if(quickSummary){
-      const payDiv=document.getElementById("paychecks"); payDiv.innerHTML="";
-      const typeTotals={}; incomes.forEach(p=>{const key=p.type+(p.customType?" - "+p.customType:""); typeTotals[key]=(typeTotals[key]||0)+(+p.actual||0)});
-      for(const t in typeTotals){const d=document.createElement("div"); d.className="card"; d.innerHTML=`💼 ${t}: ${fmt(typeTotals[t])} <span class="badge ${badgeClass(t.split(' - ')[0])}"></span>`; payDiv.appendChild(d);}
-      const billDiv=document.getElementById("bills"); billDiv.innerHTML=""; bills.forEach(b=>{const d=document.createElement("div");d.className="card"; d.innerHTML=`🧾 ${b.name||"Bill"}: ${fmt(b.amount||0)} <span class="badge bill"></span>`; billDiv.appendChild(d);});
-      return;
-    }
+    const filterFn=a=>filter==="all"||filter==="paid"&&a.paidDate||filter==="unpaid"&&!a.paidDate;
 
     const payDiv=document.getElementById("paychecks"); payDiv.innerHTML="";
     incomes.filter(filterFn).sort(sortFn).forEach((p,index)=>{
-      const d=document.createElement("div"); d.className="card "+(p.paid?"paid":"unpaid");
+      const d=document.createElement("div"); d.className="card "+(p.paidDate?"paid":"unpaid");
       d.innerHTML=`
-        <div class="input-row">
-          <label>Expected Amount ($)</label>
-          <input type="text" value="${p.expected||''}">
-        </div>
-        <div class="input-row">
-          <label>Actual Amount ($)</label>
-          <input type="text" value="${p.actual||''}">
-          <input type="checkbox" ${p.paid?"checked":""}>
-        </div>
-        <div class="input-row">
-          <label>Income Type</label>
-          <select>
-            <option ${p.type==="Salary"?"selected":""}>Salary</option>
-            <option ${p.type==="Bonus"?"selected":""}>Bonus</option>
-            <option ${p.type==="Freelance"?"selected":""}>Freelance</option>
-            <option ${p.type==="Other"?"selected":""}>Other</option>
-          </select>
-          <span class="badge ${badgeClass(p.type)}">${p.type}</span>
-        </div>
-        <div class="input-row">
-          <label>Custom Type (Optional)</label>
-          <input type="text" value="${p.customType||""}">
-        </div>
-        <div class="input-row">
-          <label>📅 Date Paid</label>
-          <input type="date" value="${p.paidDate||""}" ${!p.paid?"disabled":""}>
-        </div>
-        <button class="deleteBtn">🗑️ Remove</button>
-      `;
+        <div class="input-row"><label>Expected Amount ($)</label><input type="text" value="${p.expected||''}"></div>
+        <div class="input-row"><label>Actual Amount ($)</label><input type="text" value="${p.actual||''}"></div>
+        <div class="input-row"><label>Income Type</label><select>
+          <option ${p.type==="Salary"?"selected":""}>Salary</option>
+          <option ${p.type==="Bonus"?"selected":""}>Bonus</option>
+          <option ${p.type==="Freelance"?"selected":""}>Freelance</option>
+          <option ${p.type==="Other"?"selected":""}>Other</option>
+        </select><span class="badge ${badgeClass(p.type)}">${p.type}</span></div>
+        <div class="input-row"><label>Custom Type (Optional)</label><input type="text" value="${p.customType||""}"></div>
+        <div class="input-row"><label>📅 Date Paid</label><input type="date" value="${p.paidDate||""}"></div>
+        <button class="deleteBtn">🗑️ Remove</button>`;
       const [expRow,actRow,typeRow,ctRow,dateRow,del]=d.children;
-      const exp=expRow.querySelector("input"); const act=actRow.querySelector("input[type=text]");
-      const chk=actRow.querySelector("input[type=checkbox]"); const sel=typeRow.querySelector("select");
-      const ct=ctRow.querySelector("input"); const pd=dateRow.querySelector("input");
-
+      const exp=expRow.querySelector("input"); const act=actRow.querySelector("input"); const sel=typeRow.querySelector("select"); const ct=ctRow.querySelector("input"); const pd=dateRow.querySelector("input"); const delBtn=del;
       exp.oninput=e=>exp.value=exp.value.replace(/[^0-9.]/g,"");
       exp.onblur=e=>{p.expected=parseFloat(exp.value)||0; exp.value=fmt(p.expected); render();}
       act.oninput=e=>act.value=act.value.replace(/[^0-9.]/g,"");
       act.onblur=e=>{p.actual=parseFloat(act.value)||0; act.value=fmt(p.actual); render();}
-      chk.onchange=e=>{p.paid=chk.checked;if(!p.paid)p.paidDate=""; pd.disabled=!p.paid; render();}
       sel.onchange=e=>{p.type=sel.value; render();}
       ct.oninput=e=>p.customType=ct.value;
       pd.oninput=e=>p.paidDate=pd.value;
-      del.onclick=e=>{incomes.splice(index,1); render();}
+      delBtn.onclick=e=>{incomes.splice(index,1); render();}
       payDiv.appendChild(d);
     });
 
     const billDiv=document.getElementById("bills"); billDiv.innerHTML="";
     bills.filter(filterFn).sort(sortFn).forEach((b,index)=>{
-      const d=document.createElement("div"); d.className="card "+(b.paid?"paid":"unpaid");
+      const d=document.createElement("div"); d.className="card "+(b.paidDate?"paid":"unpaid");
       d.innerHTML=`
-        <div class="input-row">
-          <label>Expected Amount ($)</label>
-          <input type="text" value="${b.amount||''}">
-          <input type="checkbox" ${b.paid?"checked":""}>
-        </div>
-        <div class="input-row">
-          <label>Bill Name</label>
-          <input type="text" value="${b.name||''}">
-        </div>
-        <div class="input-row">
-          <label>📅 Date Due</label>
-          <input type="date" value="${b.due||''}">
-        </div>
-        <div class="input-row">
-          <label>📆 Date Paid</label>
-          <input type="date" value="${b.paidDate||''}" ${!b.paid?"disabled":""}>
-        </div>
-        <button class="deleteBtn">🗑️ Remove</button>
-      `;
-      const [expRow, nameRow, dueRow, pdRow, del]=d.children;
-      const am=expRow.querySelector("input[type=text]"); const chk=expRow.querySelector("input[type=checkbox]");
-      const nm=nameRow.querySelector("input"); const du=dueRow.querySelector("input"); const pd=pdRow.querySelector("input");
-
+        <div class="input-row"><label>Expected Amount ($)</label><input type="text" value="${b.amount||''}"><input type="checkbox" ${b.paidDate?"checked":""}></div>
+        <div class="input-row"><label>Bill Name</label><input type="text" value="${b.name||''}"></div>
+        <div class="input-row"><label>📅 Date Due</label><input type="date" value="${b.due||''}"></div>
+        <div class="input-row"><label>📆 Date Paid</label><input type="date" value="${b.paidDate||''}"></div>
+        <button class="deleteBtn">🗑️ Remove</button>`;
+      const [expRow,nameRow,dueRow,pdRow,del]=d.children;
+      const am=expRow.querySelector("input[type=text]"); const chk=expRow.querySelector("input[type=checkbox]"); const nm=nameRow.querySelector("input"); const du=dueRow.querySelector("input"); const pd=pdRow.querySelector("input"); const delBtn=del;
       am.oninput=e=>am.value=am.value.replace(/[^0-9.]/g,"");
       am.onblur=e=>{b.amount=parseFloat(am.value)||0; am.value=fmt(b.amount); render();}
-      chk.onchange=e=>{b.paid=chk.checked;if(!b.paid)b.paidDate=""; pd.disabled=!b.paid; render();}
+      chk.onchange=e=>{
+        if(chk.checked){
+          const today=new Date().toISOString().split('T')[0];
+          pd.value=today;
+          pd.style.backgroundColor="var(--paid-highlight)";
+          setTimeout(()=>pd.style.backgroundColor="",600);
+          b.paidDate=today;
+        } else { pd.value=""; b.paidDate=""; }
+        render();
+      }
       nm.oninput=e=>b.name=nm.value;
       du.oninput=e=>b.due=du.value;
       pd.oninput=e=>b.paidDate=pd.value;
-      del.onclick=e=>{bills.splice(index,1); render();}
+      delBtn.onclick=e=>{bills.splice(index,1); render();}
       billDiv.appendChild(d);
     });
 
     save();
+    if(quickSummary){document.getElementById("dashboard").style.display="block"; renderCharts();}
+    else{document.getElementById("dashboard").style.display="none";}
   }
 
   document.getElementById("toggleSummaryBtn").onclick=()=>{quickSummary=!quickSummary; render();}
   document.getElementById("exportBtn").onclick=exportCSV;
-  document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",expected:0,actual:0,paid:false,paidDate:""}); render();}
-  document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paid:false,paidDate:""}); render();}
+  document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",expected:0,actual:0,paidDate:""}); render();}
+  document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paidDate:""}); render();}
   document.getElementById("filterSelect").onchange=render;
   document.getElementById("sortSelect").onchange=render;
 
