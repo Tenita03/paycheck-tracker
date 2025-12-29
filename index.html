@@ -3,107 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v18B - Combined Table</title>
+<title>Paycheck Tracker v19</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
   --bg:#fff7f2;
-  --card:#fffbe6;
   --text:#333;
-  --caption:#888;
   --accent:#fdd9a7;
-  --salary:#fff3b3;
-  --bonus:#ffc1d9;
-  --freelance:#b3e0ff;
-  --other:#d9b3ff;
+  --income1:#fff3b3;
+  --income2:#ffc1d9;
+  --income3:#b3e0ff;
+  --income4:#d9b3ff;
   --bill:#ffd9d0;
   --paid-highlight:#b6fcb6;
-  --paid:#e6ffe6;
-  --unpaid:#ffe6e6;
+  --row-hover:#f0f8ff;
 }
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;background:var(--bg);color:var(--text);}
 header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.1);}
-button{background:var(--accent);color:#333;border:none;border-radius:10px;padding:6px 10px;font-size:14px;cursor:pointer;}
+button{background:var(--accent);color:#333;border:none;border-radius:10px;padding:6px 10px;font-size:14px;cursor:pointer;margin-right:6px;}
 button:hover{opacity:0.9;}
 table{width:100%;border-collapse:collapse;margin:12px 0;}
 th,td{padding:8px;text-align:left;font-size:14px;}
-th{background:#ffe6b3;}
-tr:nth-child(even){background:#fff7cc;}
+th{position:sticky;top:0;background:#ffe6b3;z-index:2;}
+tbody tr:nth-child(even){background:#fff7cc;}
+tbody tr:hover{background:var(--row-hover);}
 input,select{width:100%;padding:6px;font-size:14px;border-radius:6px;border:1px solid #ccc;}
 input[type=checkbox]{width:auto;margin-left:5px;}
 .badge{padding:2px 6px;border-radius:6px;color:#333;font-size:13px;margin-left:4px;}
-.badge.salary{background:var(--salary);}
-.badge.bonus{background:var(--bonus);}
-.badge.freelance{background:var(--freelance);}
-.badge.other{background:var(--other);}
+.badge.salary{background:var(--income1);}
+.badge.bonus{background:var(--income2);}
+.badge.freelance{background:var(--income3);}
+.badge.other{background:var(--income4);}
 .badge.bill{background:var(--bill);}
 .summary-container{padding:0 12px;}
-.summary{background:var(--card);border-radius:16px;padding:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;}
-#dashboard{display:none;padding:12px;margin:12px;background:var(--card);border-radius:16px;}
+.summary{background:#fffbe6;border-radius:16px;padding:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;}
+#dashboard{display:none;padding:12px;margin:12px;background:#fffbe6;border-radius:16px;}
 canvas{max-width:100%;height:200px;}
+#totals{position:fixed;bottom:0;left:0;width:100%;background:#fffbe6;padding:10px;box-shadow:0 -2px 5px rgba(0,0,0,.1);font-weight:600;display:flex;justify-content:space-around;z-index:3;}
 </style>
 </head>
 <body>
 <header>
-  <h2>💰 Paycheck Tracker</h2>
-  <div>
-    <button id="toggleSummaryBtn">📊 Quick Summary</button>
-    <button id="exportBtn">📤 Export CSV</button>
-  </div>
+<h2>💰 Paycheck Tracker</h2>
+<div>
+<button id="addEntryBtn">➕ Add Entry</button>
+<button id="toggleSummaryBtn">📊 Quick Summary</button>
+<button id="exportBtn">📤 Export CSV</button>
+</div>
 </header>
 
 <div class="summary-container">
-  <div class="summary" id="summary"></div>
+<div class="summary" id="summary"></div>
 </div>
 
 <div class="filters">
-  <select id="filterSelect">
-    <option value="all">Show: All</option>
-    <option value="paid">Show: Paid</option>
-    <option value="unpaid">Show: Unpaid</option>
-  </select>
-  <select id="sortSelect">
-    <option value="date">Sort by: Date</option>
-    <option value="amount">Sort by: Amount</option>
-  </select>
+<select id="filterSelect">
+<option value="all">Show: All</option>
+<option value="paid">Show: Paid</option>
+<option value="unpaid">Show: Unpaid</option>
+</select>
+<select id="sortSelect">
+<option value="date">Sort by: Date</option>
+<option value="amount">Sort by: Amount</option>
+</select>
 </div>
 
 <div id="dashboard">
-  <h3>Income by Type</h3>
-  <canvas id="incomeChart"></canvas>
-  <h3>Bills Paid vs Unpaid</h3>
-  <canvas id="billsChart"></canvas>
+<h3>Income by Type</h3>
+<canvas id="incomeChart"></canvas>
+<h3>Bills Paid vs Unpaid</h3>
+<canvas id="billsChart"></canvas>
 </div>
 
-<h3>All Transactions</h3>
-<button id="addIncomeBtn">➕ Add Income</button>
-<button id="addBillBtn">➕ Add Bill</button>
 <table id="combinedTable">
-  <thead>
-    <tr>
-      <th>Category</th>
-      <th>Name / Type</th>
-      <th>Custom Type</th>
-      <th>Expected ($)</th>
-      <th>Actual ($)</th>
-      <th>📅 Date Due</th>
-      <th>📆 Date Paid</th>
-      <th>Paid?</th>
-      <th>Difference</th>
-      <th>Remove</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
+<thead>
+<tr>
+<th>Category</th>
+<th>Name / Type</th>
+<th>Custom Type</th>
+<th>Expected ($)</th>
+<th>Actual ($)</th>
+<th>📅 Date Due</th>
+<th>📆 Date Paid</th>
+<th>Paid?</th>
+<th>Difference</th>
+<th>Remove</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
+
+<div id="totals">
+<span id="totalIncome">Income: $0.00</span>
+<span id="totalBills">Bills: $0.00</span>
+<span id="balanceLeft">Left: $0.00</span>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 let quickSummary=false;
+
 const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes));localStorage.setItem("bills",JSON.stringify(bills));}
 const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
 const badgeClass=t=>({Salary:'salary',Bonus:'bonus',Freelance:'freelance',Other:'other'})[t]||'other';
+
 const exportCSV=()=>{
 let csv="Category,Type,Custom Type,Expected,Actual,Date Due,Date Paid,Paid?\n";
 incomes.forEach(i=>csv+=`Income,${i.type||''},${i.customType||''},${i.expected||0},${i.actual||0},,${i.paidDate||''},${i.paidDate?'Yes':'No'}\n`);
@@ -111,6 +116,7 @@ bills.forEach(b=>csv+=`Bill,${b.name||''},,${b.amount||0},,${b.due||''},${b.paid
 const blob=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");
 a.href=url;a.download="paycheck_tracker.csv";a.click();URL.revokeObjectURL(url);
 }
+
 let incomeChart=null,billsChart=null;
 const renderCharts=()=>{
 const incomeTypes=['Salary','Bonus','Freelance','Other'];
@@ -124,20 +130,27 @@ if(billsChart) billsChart.destroy();
 const ctx2=document.getElementById("billsChart").getContext("2d");
 billsChart=new Chart(ctx2,{type:'doughnut',data:{labels:['Paid','Unpaid'],datasets:[{data:[paid,unpaid],backgroundColor:['#b6fcb6','#ffd9d0']}]},options:{plugins:{legend:{position:'bottom'}}}});
 }
+
+const updateTotals=()=>{
+const totalInc=incomes.reduce((t,i)=>t+(+i.actual||0),0);
+const totalBills=bills.reduce((t,b)=>t+(+b.amount||0),0);
+const paidInc=incomes.filter(i=>i.paidDate).reduce((t,i)=>t+(+i.actual||0),0);
+const paidBills=bills.filter(b=>b.paidDate).reduce((t,b)=>t+(+b.amount||0),0);
+document.getElementById("totalIncome").innerText=`Income: ${fmt(totalInc)}`;
+document.getElementById("totalBills").innerText=`Bills: ${fmt(totalBills)}`;
+document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)}`;
+}
+
 const render=()=>{
 const filter=document.getElementById("filterSelect").value;
 const sort=document.getElementById("sortSelect").value;
-const incTot=incomes.reduce((t,p)=>t+(+p.actual||0),0);
-const incPaid=incomes.filter(p=>p.paidDate).reduce((t,p)=>t+(+p.actual||0),0);
-const billTot=bills.reduce((t,b)=>t+(+b.amount||0),0);
-const billPaid=bills.filter(b=>b.paidDate).reduce((t,b)=>t+(+b.amount||0),0);
-const left=incPaid-billPaid;
-document.getElementById("summary").innerHTML=`<strong>Summary</strong><br>💵 <b>Total Income:</b> ${fmt(incTot)} (Paid: ${fmt(incPaid)})<br>📉 <b>Total Bills:</b> ${fmt(billTot)} (Paid: ${fmt(billPaid)})<br>💰 <b>Left After Paid Items:</b> ${fmt(left)}`;
 const rows=[];
 incomes.forEach((i,index)=>rows.push({...i,index,type:"income"}));
 bills.forEach((b,index)=>rows.push({...b,index,type:"bill"}));
+
 const sortFn=(a,b)=>sort==="amount"?((+b.actual||+b.amount||0)-(+a.actual||+a.amount||0)):(new Date(b.due||b.paidDate||0)-new Date(a.due||a.paidDate||0));
 const filterFn=a=>filter==="all"||filter==="paid"&&a.paidDate||filter==="unpaid"&&!a.paidDate;
+
 const tbody=document.querySelector("#combinedTable tbody");tbody.innerHTML="";
 rows.filter(filterFn).sort(sortFn).forEach(r=>{
 const tr=document.createElement("tr");
@@ -181,14 +194,24 @@ del.onclick=e=>{bills.splice(r.index,1);render();}
 }
 tbody.appendChild(tr);
 });
-save();if(quickSummary){document.getElementById("dashboard").style.display="block";renderCharts();}else{document.getElementById("dashboard").style.display="none";}
+save();
+updateTotals();
+if(quickSummary){document.getElementById("dashboard").style.display="block";renderCharts();}else{document.getElementById("dashboard").style.display="none";}
 }
+
 document.getElementById("toggleSummaryBtn").onclick=()=>{quickSummary=!quickSummary;render();}
-document.getElementById("exportBtn").onclick=exportCSV;
-document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",expected:0,actual:0,paidDate:""});render();}
-document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paidDate:""});render();}
+document.getElementById("exportBtn").onclick=()=>exportCSV();
+
+document.getElementById("addEntryBtn").onclick=()=>{
+const type=prompt("Add Entry Type: Income or Bill?").toLowerCase();
+if(type==="income"){incomes.push({type:"Salary",customType:"",expected:0,actual:0,paidDate:""});}
+else if(type==="bill"){bills.push({name:"",due:"",amount:0,paidDate:""});}
+render();
+}
+
 document.getElementById("filterSelect").onchange=render;
 document.getElementById("sortSelect").onchange=render;
+
 render();
 });
 </script>
