@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v41+ Dropdown</title>
+<title>Paycheck Tracker Dropdown Fixed</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
@@ -60,8 +60,6 @@ input:checked + .slider:before{transform:translateX(16px);}
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded",()=>{
-
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 let currentDate=new Date();
@@ -153,7 +151,7 @@ function renderEntries(){
   updateDashboard();
 }
 
-// Month dropdown
+// Populate month dropdown
 const monthSelect=document.getElementById("monthSelect");
 for(let m=0;m<12;m++){
   const opt=document.createElement("option");
@@ -162,7 +160,7 @@ for(let m=0;m<12;m++){
 }
 monthSelect.addEventListener("change",()=>{currentDate.setMonth(parseInt(monthSelect.value)); renderEntries();});
 
-// Year dropdown
+// Populate year dropdown
 const yearSelect=document.getElementById("yearSelect");
 const currentYear=new Date().getFullYear();
 for(let y=currentYear-5;y<=currentYear+5;y++){
@@ -171,14 +169,13 @@ for(let y=currentYear-5;y<=currentYear+5;y++){
 }
 yearSelect.addEventListener("change",()=>{currentDate.setFullYear(parseInt(yearSelect.value)); renderEntries();});
 
-// Add buttons fixed to use selected month/year
+// Add buttons
 document.getElementById("addIncomeBtn").addEventListener("click",()=>{
   const month=currentDate.getMonth()+1;
   const newDate=`${currentDate.getFullYear()}-${month.toString().padStart(2,"0")}-01`;
   incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:"",date:newDate});
   save(); renderEntries();
 });
-
 document.getElementById("addBillBtn").addEventListener("click",()=>{
   const month=currentDate.getMonth()+1;
   const newDate=`${currentDate.getFullYear()}-${month.toString().padStart(2,"0")}-01`;
@@ -186,6 +183,7 @@ document.getElementById("addBillBtn").addEventListener("click",()=>{
   save(); renderEntries();
 });
 
+// Initialize
 renderEntries();
 </script>
 </body>
