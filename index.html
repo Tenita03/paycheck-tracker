@@ -9,14 +9,13 @@ body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
 
 /* Calendar wrapper */
-#calendarWrapper{width:150px;margin:0 auto;}
+#calendarWrapper{width:180px;margin:0 auto;}
 .monthNav{
   display:flex;
-  justify-content:flex-start;
+  justify-content:center;
   align-items:center;
   gap:6px;
-  margin:0 auto 4px auto;
-  transform:translateX(10px);
+  margin:0 auto 6px auto;
 }
 .monthNav button, .monthNav select{
   vertical-align:middle;
@@ -36,8 +35,8 @@ header{text-align:center;font-size:28px;padding:12px;}
 }
 
 /* Mini calendar */
-#miniCalendarContainer{width:150px;margin:0 auto;display:flex;justify-content:center;}
-#miniCalendar{width:150px;border-collapse:collapse;}
+#miniCalendarContainer{width:180px;margin:0 auto;display:flex;justify-content:center;}
+#miniCalendar{width:180px;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{
   width:18px;height:18px;font-size:9px;text-align:center;
   border:1px solid #ccc;cursor:pointer;
@@ -212,25 +211,51 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-// Update dashboard with running totals
+// Update dashboard with carryover logic
 function updateDashboard(){
-  const incomeTotal = incomes
-    .filter(e=>{
+  const y=currentDate.getFullYear();
+  const m=currentDate.getMonth();
+
+  // Calculate carryover from previous months
+  let carryover=0;
+  for(let i=0;i<m;i++){
+    const prevIncome=incomes.filter(e=>{
       const d=parseLocalDate(e.date);
-      return d && d.getFullYear()===currentDate.getFullYear() && d.getMonth()===currentDate.getMonth() && d.getDate()<=selectedDay;
-    })
-    .reduce((s,i)=>s+(+i.actual||0),0);
-
-  const billsTotal = bills
-    .filter(b=>{
+      return d&&d.getFullYear()===y&&d.getMonth()===i;
+    }).reduce((s,e)=>s+(+e.actual||0),0);
+    const prevBills=bills.filter(b=>{
       const d=parseLocalDate(b.date);
-      return d && d.getFullYear()===currentDate.getFullYear() && d.getMonth()===currentDate.getMonth();
-    })
-    .reduce((s,b)=>s+(+b.amount||0),0);
+      return d&&d.getFullYear()===y&&d.getMonth()===i;
+    }).reduce((s,b)=>s+(+b.amount||0),0);
+    carryover+=prevIncome-prevBills;
+  }
 
-  dashIncome.textContent=incomeTotal.toFixed(2);
-  dashBills.textContent=billsTotal.toFixed(2);
-  dashLeft.textContent=(incomeTotal-billsTotal).toFixed(2);
+  // Income received up to selected day in current month
+  const currentIncome=incomes.filter(e=>{
+    const d=parseLocalDate(e.date);
+    return d&&d.getFullYear()===y&&d.getMonth()===m&&(!selectedDay||d.getDate()<=selectedDay);
+  }).reduce((s,i)=>s+(+i.actual||0),0);
+
+  // Bills due this month
+  const billsThisMonth=bills.filter(b=>{
+    const d=parseLocalDate(b.date);
+    return d&&d.getFullYear()===y&&d.getMonth()===m;
+  }).reduce((s,b)=>s+(+b.amount||0),0);
+
+  // Bills paid early (paid in this month but due in future month)
+  const earlyPaid=bills.filter(b=>{
+    const paid=parseLocalDate(b.paidDate);
+    const due=parseLocalDate(b.date);
+    return paid&&paid.getFullYear()===y&&paid.getMonth()===m&&due.getMonth()>m;
+  }).reduce((s,b)=>s+(+b.amount||0),0);
+
+  const totalIncome=carryover+currentIncome;
+  const totalBills=billsThisMonth;
+  const leftover=totalIncome-totalBills-earlyPaid;
+
+  dashIncome.textContent=totalIncome.toFixed(2);
+  dashBills.textContent=totalBills.toFixed(2);
+  dashLeft.textContent=leftover.toFixed(2);
 }
 
 // Render tables
@@ -263,7 +288,7 @@ function render(){
       <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();"></td>
       <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();"></td>
       <td><input type="number" placeholder="$0.00" value="${b.amount||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="bills[${x}].amount=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
-      <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();"><span class='slider'></span></label></td>
+      <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();render();"><span class='slider'></span></label></td>
       <td><input type="date" value="${b.paidDate||''}" onchange="bills[${x}].paidDate=this.value;saveData();"></td>
       <td><button class='removeBtn' onclick='bills.splice(${x},1);saveData();render();'>🗑️</button></td>`;bt.appendChild(tr);}
   });
