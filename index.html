@@ -3,61 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v20.2 Fixed</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Paycheck Tracker v21</title>
 <style>
 :root {
   --bg:#fff7f2;
   --text:#333;
   --accent:#ffd8a8;
-  --incomeSalary:#ffe066;
-  --incomeBonus:#ff85a2;
-  --incomeFreelance:#6ec6ff;
-  --incomeOther:#c084fc;
-  --bill:#ffb3b3;
+  --income:#ffe066;
+  --bonus:#ff85a2;
+  --freelance:#6ec6ff;
+  --other:#c084fc;
   --paid:#4ade80;
   --unpaid:#d1d5db;
-  --row-hover:#f0f8ff;
-  --filter-bg:#f0f0f0;
-  --pill-shadow:0 2px 6px rgba(0,0,0,0.15);
+  --card-bg:#fff;
+  --card-shadow:0 3px 8px rgba(0,0,0,0.1);
 }
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro",sans-serif;background:var(--bg);color:var(--text);}
-header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.1);}
-button{background:var(--accent);color:#333;border:none;border-radius:10px;padding:6px 10px;font-size:14px;cursor:pointer;margin-right:6px;}
-button:hover{opacity:0.9;}
-table{width:100%;border-collapse:collapse;margin:12px 0;}
-th,td{padding:8px;text-align:left;font-size:14px;}
-thead th{position:sticky;top:0;background:#ffe6b3;z-index:2;cursor:pointer;user-select:none;}
-tbody tr:nth-child(even){background:#fff7cc;}
-tbody tr:hover{background:var(--row-hover);}
-input,select{width:100%;padding:6px;font-size:14px;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;}
-input[type=checkbox]{width:auto;margin-left:5px;}
-.summary-container{padding:0 12px;}
-.summary{background:#fffbe6;border-radius:16px;padding:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;}
-#dashboard{display:none;padding:12px;margin:12px;background:#fffbe6;border-radius:16px;}
-canvas{max-width:100%;height:200px;}
-#totals{position:fixed;bottom:0;left:0;width:100%;background:#fffbe6;padding:10px;box-shadow:0 -2px 5px rgba(0,0,0,.1);font-weight:600;display:flex;justify-content:space-around;z-index:3;}
-#filterRow input, #filterRow select{background:var(--filter-bg);}
-.pill-container{display:flex;flex-direction:column;gap:4px;}
-.pill{padding:4px 12px;border-radius:20px;cursor:pointer;box-shadow:var(--pill-shadow);transition:all 0.2s;font-size:13px;user-select:none;text-align:center;}
-.pill.active{transform:scale(1.05);box-shadow:0 4px 8px rgba(0,0,0,0.25);}
-.pill.salary{background:linear-gradient(145deg,#ffe066,#ffd933);}
-.pill.bonus{background:linear-gradient(145deg,#ff85a2,#ff4f7c);}
-.pill.freelance{background:linear-gradient(145deg,#6ec6ff,#3faaff);}
-.pill.other{background:linear-gradient(145deg,#c084fc,#9c4dff);}
-.pill.paid{background:linear-gradient(145deg,#4ade80,#22c55e);}
-.pill.unpaid{background:linear-gradient(145deg,#d1d5db,#9ca3af);}
-.mini-caption{font-size:11px;color:#777;margin-top:2px;}
+body{
+  margin:0;
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px; border-bottom:1px solid rgba(0,0,0,.1);
+}
+button{
+  background:var(--accent);
+  color:#333;
+  border:none;
+  border-radius:12px;
+  padding:8px 12px;
+  font-size:14px;
+  cursor:pointer;
+  transition: transform 0.1s ease;
+}
+button:active{
+  transform: scale(0.95);
+}
+.summary-container{
+  padding:12px;
+}
+.summary{
+  background:var(--card-bg);
+  border-radius:16px;
+  padding:12px;
+  box-shadow:var(--card-shadow);
+  font-size:16px;
+  font-weight:500;
+}
+.card{
+  background:var(--card-bg);
+  border-radius:16px;
+  padding:12px;
+  margin:10px 12px;
+  box-shadow:var(--card-shadow);
+  transition: transform 0.1s ease;
+}
+.card:active{
+  transform: scale(0.98);
+}
+input, select{
+  width:100%;
+  padding:8px;
+  font-size:14px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+  margin-top:4px;
+}
+.mini-caption{
+  font-size:11px;
+  color:#777;
+  margin-top:2px;
+}
+.switch{
+  position:relative;
+  display:inline-block;
+  width:50px;
+  height:28px;
+}
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.slider{
+  position:absolute;
+  cursor:pointer;
+  top:0; left:0; right:0; bottom:0;
+  background-color:var(--unpaid);
+  border-radius:28px;
+  transition: 0.4s;
+}
+.slider:before{
+  position:absolute;
+  content:"";
+  height:22px;
+  width:22px;
+  left:3px;
+  bottom:3px;
+  background-color:white;
+  border-radius:50%;
+  transition: 0.4s;
+}
+input:checked + .slider{
+  background-color:var(--paid);
+}
+input:checked + .slider:before{
+  transform:translateX(22px);
+}
+#totals{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:var(--card-bg);
+  padding:10px;
+  box-shadow:0 -2px 5px rgba(0,0,0,0.1);
+  font-weight:600;
+  display:flex;
+  justify-content:space-around;
+  z-index:3;
+}
 </style>
 </head>
 <body>
+
 <header>
 <h2>💰 Paycheck Tracker</h2>
 <div>
 <button id="addIncomeBtn">➕ Add Income</button>
 <button id="addBillBtn">➕ Add Bill</button>
-<button id="toggleSummaryBtn">📊 Quick Summary</button>
-<button id="exportBtn">📤 Export CSV</button>
 </div>
 </header>
 
@@ -65,35 +142,7 @@ canvas{max-width:100%;height:200px;}
 <div class="summary" id="summary"></div>
 </div>
 
-<table id="combinedTable">
-<thead>
-<tr>
-<th>Category</th>
-<th>Name / Type</th>
-<th>Custom Type</th>
-<th>Expected ($)</th>
-<th>Actual ($)</th>
-<th>📅 Date Due</th>
-<th>📆 Date Paid</th>
-<th>Paid?</th>
-<th>Difference</th>
-<th>Remove</th>
-</tr>
-<tr id="filterRow">
-<td><select id="categoryFilter"><option value="">All</option><option value="Income">Income</option><option value="Bill">Bill</option></select></td>
-<td><input id="nameFilter" placeholder="Filter"></td>
-<td><input id="customFilter" placeholder="Filter"></td>
-<td><input id="expectedFilter" placeholder="Filter"></td>
-<td><input id="actualFilter" placeholder="Filter"></td>
-<td><input id="dueFilter" placeholder="Filter"></td>
-<td><input id="paidDateFilter" placeholder="Filter"></td>
-<td><select id="paidFilter"><option value="">All</option><option value="paid">Paid</option><option value="unpaid">Unpaid</option></select></td>
-<td></td>
-<td></td>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<div id="entries"></div>
 
 <div id="totals">
 <span id="totalIncome">Income: $0.00</span>
@@ -106,7 +155,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 
-const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes));localStorage.setItem("bills",JSON.stringify(bills));}
+const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes)); localStorage.setItem("bills",JSON.stringify(bills));}
 const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
 
 const renderTotals=()=>{
@@ -117,100 +166,137 @@ const paidBills=bills.filter(b=>b.paidDate).reduce((t,b)=>t+(+b.amount||0),0);
 document.getElementById("totalIncome").innerText=`Income: ${fmt(totalInc)}`;
 document.getElementById("totalBills").innerText=`Bills: ${fmt(totalBills)}`;
 document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)}`;
+document.getElementById("summary").innerText=`Monthly Income: ${fmt(totalInc)} | Bills: ${fmt(totalBills)} | Left: ${fmt(paidInc-paidBills)}`;
 }
 
-// FIXED: Create vertical pill selector properly
-function createVerticalPills(options, current, onChange, classes, tooltips={}){
-const container=document.createElement("div");
-container.className="pill-container";
-options.forEach(opt=>{
-const pill=document.createElement("div");
-pill.className="pill "+classes[opt];
-pill.innerText=opt;
-if(current===opt)pill.classList.add("active");
-if(tooltips[opt])pill.title=tooltips[opt];
-pill.onclick=()=>{
-options.forEach(o=>container.querySelector(".pill."+classes[o])?.classList.remove("active"));
-pill.classList.add("active");
-onChange(opt);
-};
-container.appendChild(pill);
-});
-return container;
-}
-
-// Render main table
 const render=()=>{
-const tbody=document.querySelector("#combinedTable tbody");
-tbody.innerHTML="";
-const rows=[];
-incomes.forEach((i,index)=>rows.push({...i,index,type:"income"}));
-bills.forEach((b,index)=>rows.push({...b,index,type:"bill"}));
+const container=document.getElementById("entries");
+container.innerHTML="";
 
-rows.forEach(r=>{
-const tr=document.createElement("tr");
-if(r.type==="income"){
-tr.innerHTML=`<td>Income</td><td></td><td><input type="text" value="${r.customType||''}"><div class="mini-caption">Optional description</div></td>
-<td><input type="text" value="${r.expected||0}"><div class="mini-caption">Enter expected</div></td>
-<td><input type="text" value="${r.actual||0}"><div class="mini-caption">Enter actual</div></td>
-<td>-</td><td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td><td>-</td>
-<td>${fmt((r.actual||0)-(r.expected||0))}</td><td><button>🗑️</button></td>`;
+// Render incomes
+incomes.forEach((i,index)=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<label>Income Type
+<select>
+<option ${i.type==="Salary"?"selected":""}>Salary</option>
+<option ${i.type==="Bonus"?"selected":""}>Bonus</option>
+<option ${i.type==="Freelance"?"selected":""}>Freelance</option>
+<option ${i.type==="Other"?"selected":""}>Other</option>
+</select>
+<div class="mini-caption">Select income type</div>
+</label>
+<label>Custom Description
+<input type="text" value="${i.custom||''}">
+<div class="mini-caption">Optional description</div>
+</label>
+<label>Expected Amount ($)
+<input type="text" value="${i.expected||0}">
+<div class="mini-caption">Enter expected income</div>
+</label>
+<label>Actual Amount ($)
+<input type="text" value="${i.actual||0}">
+<div class="mini-caption">Enter actual income</div>
+</label>
+<label>Date Paid
+<input type="date" value="${i.paidDate||''}">
+<div class="mini-caption">Date received</div>
+</label>
+<button>🗑️ Remove</button>
+`;
 
-const selCell=tr.children[1];
-const typePill=createVerticalPills(["Salary","Bonus","Freelance","Other"],r.type,opt=>{incomes[r.index].type=opt; save(); renderTotals();}, 
-{Salary:"salary",Bonus:"bonus",Freelance:"freelance",Other:"other"},
-{Salary:"Regular job income",Bonus:"Performance bonus",Freelance:"Side gig",Other:"Misc income"});
-selCell.appendChild(typePill);
+const sel=card.querySelector("select");
+sel.onchange=e=>{i.type=sel.value; save(); renderTotals();}
 
-const ct=tr.children[2].querySelector("input");
-const exp=tr.children[3].querySelector("input");
-const act=tr.children[4].querySelector("input");
-const pd=tr.children[6].querySelector("input");
-const del=tr.children[9].querySelector("button");
-ct.oninput=()=>incomes[r.index].customType=ct.value;
-exp.oninput=()=>exp.value=exp.value.replace(/[^0-9.]/g,"");
-exp.onblur=()=>{incomes[r.index].expected=parseFloat(exp.value)||0;save();renderTotals();}
-act.oninput=()=>act.value=act.value.replace(/[^0-9.]/g,"");
-act.onblur=()=>{incomes[r.index].actual=parseFloat(act.value)||0;save();renderTotals();}
-pd.oninput=()=>{incomes[r.index].paidDate=pd.value;save();}
-del.onclick=()=>{incomes.splice(r.index,1);save();render();}
-} else {
-tr.innerHTML=`<td>Bill</td><td><input type="text" value="${r.name||''}"><div class="mini-caption">Bill name</div></td><td>-</td>
-<td><input type="text" value="${r.amount||0}"><div class="mini-caption">Amount due</div></td>
-<td>-</td><td><input type="date" value="${r.due||''}"><div class="mini-caption">Date due</div></td>
-<td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td><td></td><td>-</td><td><button>🗑️</button></td>`;
+const customInput=card.querySelectorAll("input")[0];
+customInput.oninput=e=>{i.custom=customInput.value; save();}
 
-const nameI=tr.children[1].querySelector("input");
-const amtI=tr.children[3].querySelector("input");
-const dueI=tr.children[5].querySelector("input");
-const paidI=tr.children[6].querySelector("input");
-const paidCell=tr.children[7];
-const del=tr.children[9].querySelector("button");
+const expectedInput=card.querySelectorAll("input")[1];
+expectedInput.oninput=e=>expectedInput.value=expectedInput.value.replace(/[^0-9.]/g,'');
+expectedInput.onblur=e=>{i.expected=parseFloat(expectedInput.value)||0; save(); renderTotals();}
 
-const paidPill=createVerticalPills(["Unpaid","Paid"], r.paidDate?"Paid":"Unpaid", val=>{
-if(val==="Paid"){const today=new Date().toISOString().split("T")[0];paidI.value=today; bills[r.index].paidDate=today;}
-else{paidI.value=""; bills[r.index].paidDate="";}
-save(); renderTotals();
-},{Unpaid:"unpaid",Paid:"paid"});
-paidCell.appendChild(paidPill);
+const actualInput=card.querySelectorAll("input")[2];
+actualInput.oninput=e=>actualInput.value=actualInput.value.replace(/[^0-9.]/g,'');
+actualInput.onblur=e=>{i.actual=parseFloat(actualInput.value)||0; save(); renderTotals();}
 
-nameI.oninput=()=>{bills[r.index].name=nameI.value;save();}
-amtI.oninput=()=>amtI.value=amtI.value.replace(/[^0-9.]/g,"");
-amtI.onblur=()=>{bills[r.index].amount=parseFloat(amtI.value)||0;amtI.value=fmt(bills[r.index].amount);save();renderTotals();}
-dueI.oninput=()=>{bills[r.index].due=dueI.value;save();}
-paidI.oninput=()=>{bills[r.index].paidDate=paidI.value;save();}
-del.onclick=()=>{bills.splice(r.index,1);save();render();}
-}
-tbody.appendChild(tr);
+const dateInput=card.querySelectorAll("input")[3];
+dateInput.oninput=e=>{i.paidDate=dateInput.value; save(); renderTotals();}
+
+const del=card.querySelector("button");
+del.onclick=()=>{incomes.splice(index,1); save(); render();}
+
+container.appendChild(card);
 });
+
+// Render bills
+bills.forEach((b,index)=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<label>Bill Name
+<input type="text" value="${b.name||''}">
+<div class="mini-caption">Bill name</div>
+</label>
+<label>Amount ($)
+<input type="text" value="${b.amount||0}">
+<div class="mini-caption">Amount due</div>
+</label>
+<label>Date Due
+<input type="date" value="${b.due||''}">
+<div class="mini-caption">Due date</div>
+</label>
+<label>Paid
+<label class="switch">
+<input type="checkbox" ${b.paidDate?"checked":""}>
+<span class="slider"></span>
+</label>
+<div class="mini-caption">Toggle when paid</div>
+</label>
+<label>Date Paid
+<input type="date" value="${b.paidDate||''}">
+<div class="mini-caption">Date paid</div>
+</label>
+<button>🗑️ Remove</button>
+`;
+
+const nameI=card.querySelectorAll("input")[0];
+const amtI=card.querySelectorAll("input")[1];
+const dueI=card.querySelectorAll("input")[2];
+const paidChk=card.querySelectorAll("input")[3];
+const paidDateI=card.querySelectorAll("input")[4];
+const del=card.querySelector("button");
+
+nameI.oninput=e=>{b.name=nameI.value; save();}
+amtI.oninput=e=>amtI.value=amtI.value.replace(/[^0-9.]/g,'');
+amtI.onblur=e=>{b.amount=parseFloat(amtI.value)||0; save(); renderTotals();}
+dueI.oninput=e=>{b.due=dueI.value; save();}
+paidChk.onchange=e=>{
+if(paidChk.checked){const today=new Date().toISOString().split("T")[0];b.paidDate=today; paidDateI.value=today;}
+else{b.paidDate=""; paidDateI.value="";}
+save(); renderTotals();
+}
+paidDateI.oninput=e=>{b.paidDate=paidDateI.value; save(); renderTotals();}
+del.onclick=()=>{bills.splice(index,1); save(); render();}
+
+container.appendChild(card);
+});
+
 renderTotals();
 }
 
-document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",expected:0,actual:0,paidDate:""});save();render();}
-document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paidDate:""});save();render();}
+document.getElementById("addIncomeBtn").onclick=()=>{
+incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:""});
+save(); render();
+}
+document.getElementById("addBillBtn").onclick=()=>{
+bills.push({name:"",amount:0,due:"",paidDate:""});
+save(); render();
+}
 
 render();
 });
 </script>
+
 </body>
 </html>
