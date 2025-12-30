@@ -50,6 +50,11 @@ input,select{width:95%;font-size:11px}
   <div>Left: $<span id="dLeft">0</span></div>
 </div>
 
+<div style="padding:12px">
+  <canvas id="monthChart" height="140"></canvas>
+  <button class="btn" onclick="exportCSV()">Export CSV</button>
+</div>
+
 <div class="section">
 <h3>Income</h3>
 <button class="btn" onclick="addIncome()">➕ Add Income</button>
@@ -69,6 +74,42 @@ input,select{width:95%;font-size:11px}
 <tbody id="billBody"></tbody>
 </table>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function renderChart(){
+  if(window.chart) window.chart.destroy();
+  window.chart=new Chart(monthChart,{
+    type:'bar',
+    data:{
+      labels:['Income','Bills'],
+      datasets:[{
+        data:[
+          Number(dIncome.textContent),
+          Number(dBills.textContent)
+        ],
+        backgroundColor:['#4F9DDE','#E57373'],
+        borderRadius:8
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+}
+
+function exportCSV(){
+  let rows=[["Type","Name","Date","Amount"]];
+  incomes.forEach(i=>rows.push(["Income",i.type,i.date,i.actual]));
+  bills.forEach(b=>rows.push(["Bill",b.name,b.date,b.amount]));
+  const csv=rows.map(r=>r.join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="paycheck-tracker.csv";
+  a.click();
+}
+</script>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -151,6 +192,7 @@ function dashboard(){
   dIncome.textContent=(carry+income).toFixed(2);
   dBills.textContent=bill.toFixed(2);
   dLeft.textContent=(carry+income-bill).toFixed(2);
+renderChart();
 }
 
 function addIncome(){incomes.push({type:"Salary",date:iso(cur.getFullYear(),cur.getMonth(),sel),expected:"0.00",actual:"0.00"});save();render()}
@@ -161,5 +203,24 @@ function sortBills(){bills.sort((a,b)=>new Date(a.date)-new Date(b.date));save()
 function render(){renderCalendar();calendarInfo();renderTables();dashboard()}
 render();
 </script>
+<style>
+#calendarWrap{
+  width:320px;
+  margin:auto;
+  position:sticky;
+  top:0;
+  background:#FFF8F0;
+  z-index:10;
+}
+#miniCalendar td,#miniCalendar th{
+  height:40px;
+  font-size:14px;
+}
+table tbody{
+  display:table-row-group;
+  max-height:none;
+  overflow:visible;
+}
+</style>
 </body>
 </html>
