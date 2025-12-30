@@ -7,16 +7,18 @@
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
-#calendarWrapper{width:180px;margin:0 auto;}
+#calendarWrapper{width:200px;margin:0 auto;}
 .monthNav{display:flex;justify-content:center;align-items:center;gap:6px;margin:0 auto 6px auto;}
 .monthNav button, .monthNav select{vertical-align:middle;font-size:14px;padding:4px 8px;border-radius:8px;border:none;cursor:pointer;}
 #todayBtn{font-size:12px;padding:2px 6px;border-radius:6px;background:#FFD6A5;border:none;cursor:pointer;}
-#miniCalendarContainer{width:180px;margin:0 auto;display:flex;justify-content:center;}
-#miniCalendar{width:180px;border-collapse:collapse;}
+#miniCalendarContainer{width:200px;margin:0 auto;display:flex;justify-content:center;}
+#miniCalendar{width:200px;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{width:18px;height:18px;font-size:9px;text-align:center;border:1px solid #ccc;cursor:pointer;}
-#miniCalendar td.today{background:#FFB347;color:#fff;border-radius:50%;font-weight:bold;}
-#miniCalendar td.selected{background:#FF7F50;color:#fff;border-radius:50%;font-weight:bold;}
-.dashboard{display:flex;justify-content:space-around;align-items:center;background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:15px;}
+#miniCalendar td.today{border:2px solid #FF7F50;font-weight:bold;}
+#miniCalendar td.selected{border:2px solid #FFB347;font-weight:bold;}
+.dashboard{display:flex;justify-content:space-around;align-items:flex-start;background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:14px;}
+.dashboard div{max-width:30%;}
+.dashboard ul{margin:2px 0;padding-left:15px;}
 .section{margin:10px;}
 table{width:100%;border-collapse:collapse;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;}
 table tbody{display:block;max-height:200px;overflow-y:auto;}
@@ -24,7 +26,7 @@ table thead,table tbody tr{display:table;width:100%;table-layout:fixed;}
 th,td{border:1px solid #ccc;padding:3px 5px;font-size:12px;text-align:center;height:30px;}
 table input[type="text"],table input[type="number"],table input[type="date"]{width:95%;box-sizing:border-box;padding:2px 3px;font-size:11px;text-align:center;border-radius:4px;border:1px solid #ccc;}
 .addEntryBtn{font-size:13px;padding:6px 10px;border-radius:10px;background:#FFD6A5;border:none;cursor:pointer;margin:4px 0;}
-button.removeBtn{background:#FFA3A3;color:#fff;border:none;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;}
+button.removeBtn{background:#FFB3B3;color:#fff;border:none;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;}
 button.removeBtn:hover{background:#FF7B7B;}
 .switch{position:relative;display:inline-block;width:32px;height:16px;}
 .switch input{opacity:0;width:0;height:0;}
@@ -58,9 +60,18 @@ input:checked+.slider:before{transform:translateX(16px);}
 </div>
 
 <div class="dashboard">
-  <div>Total Income: $<span id="dashIncome">0</span></div>
-  <div>Total Bills: $<span id="dashBills">0</span></div>
-  <div>Left: $<span id="dashLeft">0</span></div>
+  <div>
+    Total Income: $<span id="dashIncome">0</span>
+    <ul id="incomeList" style="color:#1E88E5;"></ul>
+  </div>
+  <div>
+    Total Bills: $<span id="dashBills">0</span>
+    <ul id="billsList" style="color:#E53935;"></ul>
+  </div>
+  <div>
+    Left: $<span id="dashLeft">0</span>
+    <div id="leftCalc" style="color:#333;"></div>
+  </div>
 </div>
 
 <div class="section">
@@ -128,6 +139,12 @@ function renderMiniCalendar(){
     const today=new Date();
     if(d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear()) td.classList.add("today");
     if(d===selectedDay) td.classList.add("selected");
+    const dateStr=localISODate(y,m,d);
+    const hasIncome=incomes.some(i=>i.date===dateStr);
+    const hasBill=bills.some(b=>b.date===dateStr);
+    if(hasIncome && hasBill) td.style.background="#A569BD";
+    else if(hasIncome) td.style.background="#1E88E5";
+    else if(hasBill) td.style.background="#E53935";
     td.onclick=()=>{selectedDay=d;render();};
     row.appendChild(td);
     if((firstDay+d)%7===0){body.appendChild(row);row=document.createElement("tr");}
@@ -135,40 +152,36 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-// Dashboard with correct carryover across years
+// Dashboard
 function updateDashboard(){
   const m=currentDate.getMonth();
   const y=currentDate.getFullYear();
-
-  let leftover=0;
-  let totalIncomeThisMonth=0, billsThisMonth=0;
-
-  const allIncomes = incomes.map(i=>({...i, dateObj: parseLocalDate(i.date)})).sort((a,b)=>a.dateObj-b.dateObj);
-  const allBills = bills.map(b=>({...b, dateObj: parseLocalDate(b.date)})).sort((a,b)=>a.dateObj-b.dateObj);
-
+  let leftover=0, totalIncomeThisMonth=0, billsThisMonth=0;
+  const allIncomes=incomes.map(i=>({...i,dateObj:parseLocalDate(i.date)})).sort((a,b)=>a.dateObj-b.dateObj);
+  const allBills=bills.map(b=>({...b,dateObj:parseLocalDate(b.date)})).sort((a,b)=>a.dateObj-b.dateObj);
+  let incomeItems=[], billItems=[];
   allIncomes.forEach(i=>{
-    if(i.dateObj<new Date(y,m+1,1)){leftover += parseFloat(i.actual)||0;}
-    if(i.dateObj.getFullYear()===y && i.dateObj.getMonth()===m) totalIncomeThisMonth += parseFloat(i.actual)||0;
+    if(i.dateObj<new Date(y,m+1,1)) leftover+=parseFloat(i.actual)||0;
+    if(i.dateObj.getFullYear()===y && i.dateObj.getMonth()===m) totalIncomeThisMonth+=parseFloat(i.actual)||0;
+    if(i.dateObj<=new Date(y,m+1,0)) incomeItems.push(`${i.type||'Income'}: $${(parseFloat(i.actual)||0).toFixed(2)}`);
   });
   allBills.forEach(b=>{
-    if(b.dateObj<new Date(y,m+1,1)) leftover -= parseFloat(b.amount)||0;
-    if(b.dateObj.getFullYear()===y && b.dateObj.getMonth()===m) billsThisMonth += parseFloat(b.amount)||0;
+    if(b.dateObj<new Date(y,m+1,1)) leftover-=parseFloat(b.amount)||0;
+    if(b.dateObj.getFullYear()===y && b.dateObj.getMonth()===m) billsThisMonth+=parseFloat(b.amount)||0;
+    if(b.dateObj<=new Date(y,m+1,0)) billItems.push(`${b.name||'Bill'}: $${(parseFloat(b.amount)||0).toFixed(2)}`);
   });
-
-  const dashIncome=leftover;
-  const dashLeft=leftover-billsThisMonth;
-
+  const dashIncome=leftover, dashLeft=leftover-billsThisMonth;
   document.getElementById("dashIncome").textContent=dashIncome.toFixed(2);
   document.getElementById("dashBills").textContent=billsThisMonth.toFixed(2);
   document.getElementById("dashLeft").textContent=dashLeft.toFixed(2);
+  const incomeList=document.getElementById("incomeList"); incomeList.innerHTML=""; incomeItems.forEach(item=>{const li=document.createElement("li");li.textContent=item;incomeList.appendChild(li);});
+  const billsList=document.getElementById("billsList"); billsList.innerHTML=""; billItems.forEach(item=>{const li=document.createElement("li");li.textContent=item;billsList.appendChild(li);});
+  document.getElementById("leftCalc").textContent=`(${dashIncome.toFixed(2)} - ${billsThisMonth.toFixed(2)})`;
 }
 
 // Render tables
 function render(){
-  renderMiniCalendar();
-  updateDashboard();
-
-  // Income Table
+  renderMiniCalendar(); updateDashboard();
   const it=document.querySelector("#incomeTable tbody"); it.innerHTML="";
   incomes.forEach((i,x)=>{
     const d=parseLocalDate(i.date);
@@ -184,8 +197,6 @@ function render(){
       it.appendChild(tr);
     }
   });
-
-  // Bills Table
   const bt=document.querySelector("#billTable tbody"); bt.innerHTML="";
   bills.forEach((b,x)=>{
     const d=parseLocalDate(b.date);
