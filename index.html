@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v20.2</title>
+<title>Paycheck Tracker v20.2 Fixed</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
@@ -48,7 +48,6 @@ canvas{max-width:100%;height:200px;}
 .pill.paid{background:linear-gradient(145deg,#4ade80,#22c55e);}
 .pill.unpaid{background:linear-gradient(145deg,#d1d5db,#9ca3af);}
 .mini-caption{font-size:11px;color:#777;margin-top:2px;}
-.dragging{background:#e0f7ff !important;}
 </style>
 </head>
 <body>
@@ -102,31 +101,13 @@ canvas{max-width:100%;height:200px;}
 <span id="balanceLeft">Left: $0.00</span>
 </div>
 
-<div id="dashboard">
-<h3>Income by Type</h3>
-<canvas id="incomeChart"></canvas>
-<h3>Bills Paid vs Unpaid</h3>
-<canvas id="billsChart"></canvas>
-</div>
-
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
-let quickSummary=false;
 
 const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes));localStorage.setItem("bills",JSON.stringify(bills));}
 const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
-const exportCSV=()=>{
-let csv="Category,Type,Custom Type,Expected,Actual,Date Due,Date Paid,Paid?\n";
-incomes.forEach(i=>csv+=`Income,${i.type||''},${i.customType||''},${i.expected||0},${i.actual||0},,${i.paidDate||''},${i.paidDate?'Yes':'No'}\n`);
-bills.forEach(b=>csv+=`Bill,${b.name||''},,${b.amount||0},,${b.due||''},${b.paidDate||''},${b.paidDate?'Yes':'No'}\n`);
-const blob=new Blob([csv],{type:"text/csv"});
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;a.download="paycheck_tracker.csv";
-a.click();URL.revokeObjectURL(url);
-}
 
 const renderTotals=()=>{
 const totalInc=incomes.reduce((t,i)=>t+(+i.actual||0),0);
@@ -138,7 +119,7 @@ document.getElementById("totalBills").innerText=`Bills: ${fmt(totalBills)}`;
 document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)}`;
 }
 
-// Create vertical pill selector
+// FIXED: Create vertical pill selector properly
 function createVerticalPills(options, current, onChange, classes, tooltips={}){
 const container=document.createElement("div");
 container.className="pill-container";
@@ -148,41 +129,37 @@ pill.className="pill "+classes[opt];
 pill.innerText=opt;
 if(current===opt)pill.classList.add("active");
 if(tooltips[opt])pill.title=tooltips[opt];
-pill.onclick=()=>{options.forEach(o=>container.querySelector(".pill."+classes[o])?.classList.remove("active"));pill.classList.add("active"); onChange(opt);}
+pill.onclick=()=>{
+options.forEach(o=>container.querySelector(".pill."+classes[o])?.classList.remove("active"));
+pill.classList.add("active");
+onChange(opt);
+};
 container.appendChild(pill);
-return container;
 });
-container.appendChild(container);
 return container;
 }
 
-// Render table
+// Render main table
 const render=()=>{
 const tbody=document.querySelector("#combinedTable tbody");
 tbody.innerHTML="";
-
-const filterCat=document.getElementById("categoryFilter").value.toLowerCase();
-const filterPaid=document.getElementById("paidFilter").value;
-
 const rows=[];
 incomes.forEach((i,index)=>rows.push({...i,index,type:"income"}));
 bills.forEach((b,index)=>rows.push({...b,index,type:"bill"}));
 
 rows.forEach(r=>{
-if(filterCat&&r.type.toLowerCase()!==filterCat)return;
-if(filterPaid==="paid"&& !r.paidDate)return;
-if(filterPaid==="unpaid"&& r.paidDate)return;
-
 const tr=document.createElement("tr");
 if(r.type==="income"){
 tr.innerHTML=`<td>Income</td><td></td><td><input type="text" value="${r.customType||''}"><div class="mini-caption">Optional description</div></td>
-<td><input type="text" value="${r.expected||0}"><div class="mini-caption">Enter expected amount</div></td>
-<td><input type="text" value="${r.actual||0}"><div class="mini-caption">Enter actual amount</div></td>
+<td><input type="text" value="${r.expected||0}"><div class="mini-caption">Enter expected</div></td>
+<td><input type="text" value="${r.actual||0}"><div class="mini-caption">Enter actual</div></td>
 <td>-</td><td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td><td>-</td>
 <td>${fmt((r.actual||0)-(r.expected||0))}</td><td><button>🗑️</button></td>`;
 
 const selCell=tr.children[1];
-const typePill=createVerticalPills(["Salary","Bonus","Freelance","Other"],r.type,opt=>{incomes[r.index].type=opt; renderTotals();}, {Salary:"salary",Bonus:"bonus",Freelance:"freelance",Other:"other"}, {Salary:"Regular job income",Bonus:"Bonus or performance pay",Freelance:"Contract/side gig",Other:"Misc income"});
+const typePill=createVerticalPills(["Salary","Bonus","Freelance","Other"],r.type,opt=>{incomes[r.index].type=opt; save(); renderTotals();}, 
+{Salary:"salary",Bonus:"bonus",Freelance:"freelance",Other:"other"},
+{Salary:"Regular job income",Bonus:"Performance bonus",Freelance:"Side gig",Other:"Misc income"});
 selCell.appendChild(typePill);
 
 const ct=tr.children[2].querySelector("input");
@@ -190,19 +167,18 @@ const exp=tr.children[3].querySelector("input");
 const act=tr.children[4].querySelector("input");
 const pd=tr.children[6].querySelector("input");
 const del=tr.children[9].querySelector("button");
-
-ct.oninput=e=>incomes[r.index].customType=ct.value;
-exp.oninput=e=>exp.value=exp.value.replace(/[^0-9.]/g,""); exp.onblur=e=>{incomes[r.index].expected=parseFloat(exp.value)||0; renderTotals();}
-act.oninput=e=>act.value=act.value.replace(/[^0-9.]/g,""); act.onblur=e=>{incomes[r.index].actual=parseFloat(act.value)||0; renderTotals();}
-pd.oninput=e=>incomes[r.index].paidDate=pd.value;
-del.onclick=e=>{incomes.splice(r.index,1); render();}
+ct.oninput=()=>incomes[r.index].customType=ct.value;
+exp.oninput=()=>exp.value=exp.value.replace(/[^0-9.]/g,"");
+exp.onblur=()=>{incomes[r.index].expected=parseFloat(exp.value)||0;save();renderTotals();}
+act.oninput=()=>act.value=act.value.replace(/[^0-9.]/g,"");
+act.onblur=()=>{incomes[r.index].actual=parseFloat(act.value)||0;save();renderTotals();}
+pd.oninput=()=>{incomes[r.index].paidDate=pd.value;save();}
+del.onclick=()=>{incomes.splice(r.index,1);save();render();}
 } else {
 tr.innerHTML=`<td>Bill</td><td><input type="text" value="${r.name||''}"><div class="mini-caption">Bill name</div></td><td>-</td>
 <td><input type="text" value="${r.amount||0}"><div class="mini-caption">Amount due</div></td>
-<td>-</td>
-<td><input type="date" value="${r.due||''}"><div class="mini-caption">Date due</div></td>
-<td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td>
-<td></td><td>-</td><td><button>🗑️</button></td>`;
+<td>-</td><td><input type="date" value="${r.due||''}"><div class="mini-caption">Date due</div></td>
+<td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td><td></td><td>-</td><td><button>🗑️</button></td>`;
 
 const nameI=tr.children[1].querySelector("input");
 const amtI=tr.children[3].querySelector("input");
@@ -214,34 +190,27 @@ const del=tr.children[9].querySelector("button");
 const paidPill=createVerticalPills(["Unpaid","Paid"], r.paidDate?"Paid":"Unpaid", val=>{
 if(val==="Paid"){const today=new Date().toISOString().split("T")[0];paidI.value=today; bills[r.index].paidDate=today;}
 else{paidI.value=""; bills[r.index].paidDate="";}
-renderTotals();
+save(); renderTotals();
 },{Unpaid:"unpaid",Paid:"paid"});
 paidCell.appendChild(paidPill);
 
-nameI.oninput=e=>bills[r.index].name=nameI.value;
-amtI.oninput=e=>amtI.value=amtI.value.replace(/[^0-9.]/g,""); amtI.onblur=e=>{bills[r.index].amount=parseFloat(amtI.value)||0; amtI.value=fmt(bills[r.index].amount); renderTotals();}
-dueI.oninput=e=>bills[r.index].due=dueI.value;
-paidI.oninput=e=>bills[r.index].paidDate=paidI.value;
-del.onclick=e=>{bills.splice(r.index,1); render();}
+nameI.oninput=()=>{bills[r.index].name=nameI.value;save();}
+amtI.oninput=()=>amtI.value=amtI.value.replace(/[^0-9.]/g,"");
+amtI.onblur=()=>{bills[r.index].amount=parseFloat(amtI.value)||0;amtI.value=fmt(bills[r.index].amount);save();renderTotals();}
+dueI.oninput=()=>{bills[r.index].due=dueI.value;save();}
+paidI.oninput=()=>{bills[r.index].paidDate=paidI.value;save();}
+del.onclick=()=>{bills.splice(r.index,1);save();render();}
 }
-
 tbody.appendChild(tr);
 });
-save();
 renderTotals();
 }
 
-// Event listeners
-document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",expected:0,actual:0,paidDate:""}); render();}
-document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paidDate:""}); render();}
-document.getElementById("toggleSummaryBtn").onclick=()=>{quickSummary=!quickSummary; document.getElementById("dashboard").style.display=quickSummary?"block":"none";}
-document.getElementById("exportBtn").onclick=exportCSV;
-
-["categoryFilter","paidFilter","nameFilter","customFilter","expectedFilter","actualFilter","dueFilter","paidDateFilter"].forEach(id=>{
-document.getElementById(id).addEventListener("input",render);
-});
+document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",customType:"",expected:0,actual:0,paidDate:""});save();render();}
+document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",due:"",amount:0,paidDate:""});save();render();}
 
 render();
+});
 </script>
 </body>
 </html>
