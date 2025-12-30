@@ -8,26 +8,41 @@
 body { font-family: Arial,sans-serif; background:#FDF9F5; margin:0; padding:0;}
 header { text-align:center; font-size:28px; padding:12px; }
 
+/* Month/Year dropdown */
 .monthNav { display:flex; justify-content:center; gap:10px; margin:10px; }
 
+/* Mini calendar */
 #miniCalendar { border-collapse:collapse; margin:auto; }
-#miniCalendar th,#miniCalendar td { width:40px; height:40px; text-align:center; border:1px solid #ccc; font-size:16px; cursor:pointer; }
+#miniCalendar th,#miniCalendar td {
+  width:30px; height:30px; text-align:center; border:1px solid #ccc; font-size:13px; cursor:pointer;
+}
 #miniCalendar td.today { background:#FFD6A5; border-radius:50%; }
 #miniCalendar td.selected { background:#FFB347; border-radius:50%; }
 
+/* Dashboard */
 .dashboard { display:flex; justify-content:space-around; align-items:center; background:#FFF3E0; padding:10px; margin:10px; border-radius:10px; font-size:16px; }
 .progress-container { width:80%; height:10px; background:#E0E0E0; border-radius:6px; overflow:hidden; margin-top:4px; }
 .progress-fill { height:100%; background:#FFB347; width:0%; transition:width 0.3s; }
 
+/* Sections */
 .section { margin:10px; }
+
+/* Tables */
 table { width:100%; border-collapse:collapse; }
 table tbody { display:block; max-height:220px; overflow-y:auto; }
 table thead, table tbody tr { display:table; width:100%; table-layout:fixed; }
-th, td { border:1px solid #ccc; padding:8px; font-size:14px; text-align:center; height:36px; }
+th, td { border:1px solid #ccc; padding:4px 6px; font-size:14px; text-align:center; height:36px; }
 
+/* Inputs in tables */
+table input[type="text"], table input[type="number"], table input[type="date"] {
+  width:95%; box-sizing:border-box; padding:2px 4px; font-size:13px; text-align:center; border-radius:4px; border:1px solid #ccc;
+}
+
+/* Buttons */
 .addEntryBtn { font-size:15px; padding:8px 12px; border-radius:12px; background:#FFD6A5; border:none; cursor:pointer; margin:6px 0; }
 button.removeBtn { background:#FF6B6B; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:12px; }
 
+/* Toggle switch */
 .switch { position:relative; display:inline-block; width:36px; height:20px; }
 .switch input { opacity:0; width:0; height:0; }
 .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:24px; transition:0.4s; }
