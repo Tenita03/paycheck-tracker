@@ -75,14 +75,12 @@ let incomes=[], bills=[];
 let currentDate = new Date();
 
 function updateDashboard() {
-  let filteredInc = incomes.filter(i => i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
-  let filteredBills = bills.filter(b => b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
-
-  let totalInc = filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
-  let totalBills = filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
-  let paidInc = filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
-  let percent = totalInc?Math.round((paidInc/totalInc)*100):0;
-
+  const filteredInc = incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
+  const filteredBills = bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
+  const totalInc = filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
+  const totalBills = filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
+  const paidInc = filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
+  const percent = totalInc ? Math.round((paidInc/totalInc)*100) : 0;
   document.getElementById("dashIncome").innerText = `Income: $${totalInc.toFixed(2)}`;
   document.getElementById("dashBills").innerText = `Bills: $${totalBills.toFixed(2)}`;
   document.getElementById("dashLeft").innerText = `Left: $${(paidInc-totalBills).toFixed(2)}`;
@@ -104,6 +102,7 @@ function renderMiniCalendar() {
   tbody.appendChild(row);
 }
 
+// ----- Card Creation Functions -----
 function createIncomeCard(i) {
   const div=document.createElement("div"); div.className="card";
   const typeGroup=document.createElement("div"); typeGroup.className="input-group";
@@ -118,7 +117,7 @@ function createIncomeCard(i) {
 
   const dateGroup=document.createElement("div"); dateGroup.className="input-group";
   const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=i.date||new Date().toISOString().split("T")[0];
-  dateInput.addEventListener("input",e=>{i.date=e.target.value; renderEntries();});
+  dateInput.addEventListener("input",()=>{i.date=dateInput.value; renderEntries();});
   dateGroup.appendChild(dateInput);
 
   const amountGroup=document.createElement("div"); amountGroup.className="inline-group";
@@ -181,11 +180,11 @@ function createBillCard(b) {
   return div;
 }
 
-function renderEntries(){
+function renderEntries() {
   const incomeC=document.getElementById("incomeContainer"); const billC=document.getElementById("billContainer");
   incomeC.innerHTML=""; billC.innerHTML="";
-  incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear()).forEach(i=>incomeC.appendChild(createIncomeCard(i)));
-  bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear()).forEach(b=>billC.appendChild(createBillCard(b)));
+  incomes.forEach(i=>incomeC.appendChild(createIncomeCard(i)));
+  bills.forEach(b=>billC.appendChild(createBillCard(b)));
   updateDashboard(); renderMiniCalendar();
 }
 
