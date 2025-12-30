@@ -3,111 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Running Totals</title>
+<title>Paycheck Tracker — Fixed Running Totals</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
-
-/* Calendar wrapper */
 #calendarWrapper{width:180px;margin:0 auto;}
-.monthNav{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:6px;
-  margin:0 auto 6px auto;
-}
-.monthNav button, .monthNav select{
-  vertical-align:middle;
-  font-size:14px;
-  padding:4px 8px;
-  border-radius:8px;
-  border:none;
-  cursor:pointer;
-}
-#todayBtn{
-  font-size:12px;
-  padding:2px 6px;
-  border-radius:6px;
-  background:#FFD6A5;
-  border:none;
-  cursor:pointer;
-}
-
-/* Mini calendar */
+.monthNav{display:flex;justify-content:center;align-items:center;gap:6px;margin:0 auto 6px auto;}
+.monthNav button, .monthNav select{vertical-align:middle;font-size:14px;padding:4px 8px;border-radius:8px;border:none;cursor:pointer;}
+#todayBtn{font-size:12px;padding:2px 6px;border-radius:6px;background:#FFD6A5;border:none;cursor:pointer;}
 #miniCalendarContainer{width:180px;margin:0 auto;display:flex;justify-content:center;}
 #miniCalendar{width:180px;border-collapse:collapse;}
-#miniCalendar th,#miniCalendar td{
-  width:18px;height:18px;font-size:9px;text-align:center;
-  border:1px solid #ccc;cursor:pointer;
-}
-#miniCalendar td.today{
-  background:#FFB347;
-  color:#fff;
-  border-radius:50%;
-  font-weight:bold;
-}
-#miniCalendar td.selected{
-  background:#FF7F50;
-  color:#fff;
-  border-radius:50%;
-  font-weight:bold;
-}
-
-/* Dashboard */
-.dashboard{display:flex;justify-content:space-around;align-items:center;
-background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:15px;}
-
-/* Tables */
+#miniCalendar th,#miniCalendar td{width:18px;height:18px;font-size:9px;text-align:center;border:1px solid #ccc;cursor:pointer;}
+#miniCalendar td.today{background:#FFB347;color:#fff;border-radius:50%;font-weight:bold;}
+#miniCalendar td.selected{background:#FF7F50;color:#fff;border-radius:50%;font-weight:bold;}
+.dashboard{display:flex;justify-content:space-around;align-items:center;background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:15px;}
 .section{margin:10px;}
 table{width:100%;border-collapse:collapse;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;}
 table tbody{display:block;max-height:200px;overflow-y:auto;}
 table thead,table tbody tr{display:table;width:100%;table-layout:fixed;}
 th,td{border:1px solid #ccc;padding:3px 5px;font-size:12px;text-align:center;height:30px;}
-table input[type="text"],table input[type="number"],table input[type="date"]{
-  width:95%;box-sizing:border-box;padding:2px 3px;font-size:11px;text-align:center;
-  border-radius:4px;border:1px solid #ccc;
-}
-
-/* Buttons & toggles */
-.addEntryBtn{font-size:13px;padding:6px 10px;border-radius:10px;background:#FFD6A5;
-border:none;cursor:pointer;margin:4px 0;}
-button.removeBtn{
-  background:#FFA3A3; /* lighter pastel red */
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  padding:3px 6px;
-  cursor:pointer;
-  font-size:10px;
-}
-button.removeBtn:hover{
-  background:#FF7B7B;
-}
+table input[type="text"],table input[type="number"],table input[type="date"]{width:95%;box-sizing:border-box;padding:2px 3px;font-size:11px;text-align:center;border-radius:4px;border:1px solid #ccc;}
+.addEntryBtn{font-size:13px;padding:6px 10px;border-radius:10px;background:#FFD6A5;border:none;cursor:pointer;margin:4px 0;}
+button.removeBtn{background:#FFA3A3;color:#fff;border:none;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;}
+button.removeBtn:hover{background:#FF7B7B;}
 .switch{position:relative;display:inline-block;width:32px;height:16px;}
 .switch input{opacity:0;width:0;height:0;}
-.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;
-background:#d1d5db;border-radius:24px;transition:.4s;}
-.slider:before{position:absolute;content:"";height:12px;width:12px;left:2px;bottom:2px;
-background:#fff;border-radius:50%;transition:.4s;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d1d5db;border-radius:24px;transition:.4s;}
+.slider:before{position:absolute;content:"";height:12px;width:12px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.4s;}
 input:checked+.slider{background:#4CAF50;border:1px solid #3A8E40;}
 input:checked+.slider:before{transform:translateX(16px);}
-
-/* Hover highlights */
-#incomeTable tbody tr:hover,
-#billTable tbody tr:hover{
-  background: #FFF1B5; 
-  transition: background 0.3s;
-}
-/* Row gradients */
-#incomeTable tbody tr[style*="B9FBC1"],
-#billTable tbody tr[style*="B9FBC1"]{
-  background: linear-gradient(to right, #B9FBC1, #D1FFD6);
-}
-#incomeTable tbody tr[style*="FFE4E1"],
-#billTable tbody tr[style*="FFE4E1"]{
-  background: linear-gradient(to right, #FFE4E1, #FFD1D1);
-}
+#incomeTable tbody tr:hover,#billTable tbody tr:hover{background: #FFF1B5; transition: background 0.3s;}
+#incomeTable tbody tr[style*="B9FBC1"],#billTable tbody tr[style*="B9FBC1"]{background: linear-gradient(to right, #B9FBC1, #D1FFD6);}
+#incomeTable tbody tr[style*="FFE4E1"],#billTable tbody tr[style*="FFE4E1"]{background: linear-gradient(to right, #FFE4E1, #FFD1D1);}
 </style>
 </head>
 <body>
@@ -143,8 +70,7 @@ input:checked+.slider:before{transform:translateX(16px);}
 <button id="addIncomeBtn" class="addEntryBtn">➕ Add Income</button>
 <table id="incomeTable">
 <thead><tr>
-<th>Type</th><th>Description</th><th>Date Received</th><th>Expected</th><th>Actual</th>
-<th>Remove</th>
+<th>Type</th><th>Description</th><th>Date Received</th><th>Expected</th><th>Actual</th><th>Remove</th>
 </tr></thead><tbody></tbody>
 </table>
 </div>
@@ -211,38 +137,28 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-// Update dashboard with carryover logic
+// Update dashboard with fixed running totals
 function updateDashboard(){
   const y=currentDate.getFullYear();
   const m=currentDate.getMonth();
 
-  // Calculate carryover from previous months
   let carryover=0;
   for(let i=0;i<m;i++){
-    const prevIncome=incomes.filter(e=>{
-      const d=parseLocalDate(e.date);
-      return d&&d.getFullYear()===y&&d.getMonth()===i;
-    }).reduce((s,e)=>s+(+e.actual||0),0);
-    const prevBills=bills.filter(b=>{
-      const d=parseLocalDate(b.date);
-      return d&&d.getFullYear()===y&&d.getMonth()===i;
-    }).reduce((s,b)=>s+(+b.amount||0),0);
+    const prevIncome=incomes.filter(e=>{const d=parseLocalDate(e.date);return d&&d.getFullYear()===y&&d.getMonth()===i;}).reduce((s,e)=>s+(+e.actual||0),0);
+    const prevBills=bills.filter(b=>{const d=parseLocalDate(b.date);return d&&d.getFullYear()===y&&d.getMonth()===i;}).reduce((s,b)=>s+(+b.amount||0),0);
     carryover+=prevIncome-prevBills;
   }
 
-  // Income received up to selected day in current month
   const currentIncome=incomes.filter(e=>{
-    const d=parseLocalDate(e.date);
-    return d&&d.getFullYear()===y&&d.getMonth()===m&&(!selectedDay||d.getDate()<=selectedDay);
+    const d=parseLocalDate(e.date);if(!d)return false;
+    return d.getFullYear()===y&&d.getMonth()===m&&(!selectedDay||d.getDate()<=selectedDay);
   }).reduce((s,i)=>s+(+i.actual||0),0);
 
-  // Bills due this month
   const billsThisMonth=bills.filter(b=>{
     const d=parseLocalDate(b.date);
     return d&&d.getFullYear()===y&&d.getMonth()===m;
   }).reduce((s,b)=>s+(+b.amount||0),0);
 
-  // Bills paid early (paid in this month but due in future month)
   const earlyPaid=bills.filter(b=>{
     const paid=parseLocalDate(b.paidDate);
     const due=parseLocalDate(b.date);
@@ -253,9 +169,9 @@ function updateDashboard(){
   const totalBills=billsThisMonth;
   const leftover=totalIncome-totalBills-earlyPaid;
 
-  dashIncome.textContent=totalIncome.toFixed(2);
-  dashBills.textContent=totalBills.toFixed(2);
-  dashLeft.textContent=leftover.toFixed(2);
+  document.getElementById("dashIncome").textContent=totalIncome.toFixed(2);
+  document.getElementById("dashBills").textContent=totalBills.toFixed(2);
+  document.getElementById("dashLeft").textContent=leftover.toFixed(2);
 }
 
 // Render tables
@@ -263,7 +179,6 @@ function render(){
   renderMiniCalendar();
   updateDashboard();
 
-  // Income
   const it=document.querySelector("#incomeTable tbody");it.innerHTML="";
   incomes.forEach((i,x)=>{
     const d=parseLocalDate(i.date);
@@ -278,7 +193,6 @@ function render(){
       <td><button class='removeBtn' onclick='incomes.splice(${x},1);saveData();render();'>🗑️</button></td>`;it.appendChild(tr);}
   });
 
-  // Bills
   const bt=document.querySelector("#billTable tbody");bt.innerHTML="";
   bills.forEach((b,x)=>{
     const d=parseLocalDate(b.date);
@@ -295,19 +209,18 @@ function render(){
 }
 
 // Add buttons
-addIncomeBtn.onclick=()=>{
+document.getElementById("addIncomeBtn").onclick=()=>{
   const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay);
   incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0,receivedDate:''});
   saveData();render();
 };
-addBillBtn.onclick=()=>{
+document.getElementById("addBillBtn").onclick=()=>{
   const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay);
   bills.push({name:'Bill',date:dateStr,amount:0,paidDate:''});
   saveData();render();
 };
 
 render();
-window.addEventListener("focusout",()=>render());
 </script>
 </body>
 </html>
