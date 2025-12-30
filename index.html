@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker Dropdown Fixed</title>
+<title>Paycheck Tracker Fixed</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
@@ -70,15 +70,15 @@ const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
 function getMonthString(date){return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;}
 
 function updateDashboard(){
-const monthStr=getMonthString(currentDate);
-const totalInc=incomes.filter(i=>i.date.startsWith(monthStr)).reduce((t,i)=>t+(+i.actual||0),0);
-const totalBills=bills.filter(b=>b.due.startsWith(monthStr)).reduce((t,b)=>t+(+b.amount||0),0);
-const paidInc=incomes.filter(i=>i.paidDate && i.date.startsWith(monthStr)).reduce((t,i)=>t+(+i.actual||0),0);
-const percent=totalInc?Math.round((paidInc/totalInc)*100):0;
-document.getElementById("dashIncome").innerText=`Income: ${fmt(totalInc)}`;
-document.getElementById("dashBills").innerText=`Bills: ${fmt(totalBills)}`;
-document.getElementById("dashLeft").innerText=`Left: ${fmt(paidInc-totalBills)}`;
-document.getElementById("dashPercent").innerText=`Received: ${percent}%`;
+  const monthStr=getMonthString(currentDate);
+  const totalInc=incomes.filter(i=>i.date.startsWith(monthStr)).reduce((t,i)=>t+(+i.actual||0),0);
+  const totalBills=bills.filter(b=>b.due.startsWith(monthStr)).reduce((t,b)=>t+(+b.amount||0),0);
+  const paidInc=incomes.filter(i=>i.paidDate && i.date.startsWith(monthStr)).reduce((t,i)=>t+(+i.actual||0),0);
+  const percent=totalInc?Math.round((paidInc/totalInc)*100):0;
+  document.getElementById("dashIncome").innerText=`Income: ${fmt(totalInc)}`;
+  document.getElementById("dashBills").innerText=`Bills: ${fmt(totalBills)}`;
+  document.getElementById("dashLeft").innerText=`Left: ${fmt(paidInc-totalBills)}`;
+  document.getElementById("dashPercent").innerText=`Received: ${percent}%`;
 }
 
 function createIncomeEntry(i){
@@ -151,7 +151,7 @@ function renderEntries(){
   updateDashboard();
 }
 
-// Populate month dropdown
+// Populate dropdowns
 const monthSelect=document.getElementById("monthSelect");
 for(let m=0;m<12;m++){
   const opt=document.createElement("option");
@@ -160,7 +160,6 @@ for(let m=0;m<12;m++){
 }
 monthSelect.addEventListener("change",()=>{currentDate.setMonth(parseInt(monthSelect.value)); renderEntries();});
 
-// Populate year dropdown
 const yearSelect=document.getElementById("yearSelect");
 const currentYear=new Date().getFullYear();
 for(let y=currentYear-5;y<=currentYear+5;y++){
@@ -183,7 +182,6 @@ document.getElementById("addBillBtn").addEventListener("click",()=>{
   save(); renderEntries();
 });
 
-// Initialize
 renderEntries();
 </script>
 </body>
