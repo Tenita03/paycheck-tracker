@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v26 Fixed</title>
+<title>Paycheck Tracker v27</title>
 <style>
 :root{
   --bg:#F2F2F7; --text:#333; --accent:#FFD8A8;
@@ -14,15 +14,17 @@ body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background
 #appContainer {
   max-width: 420px;
   height: 90vh;
-  overflow-y: auto;
   margin: 0 auto;
   padding: 8px;
-  box-sizing: border-box;
+  display:flex;
+  flex-direction:column;
+  box-sizing:border-box;
 }
 header{padding:12px; font-size:22px; font-weight:600; text-align:center;}
 .section-header{font-weight:600; font-size:18px; margin:12px 8px; display:flex; justify-content:space-between; align-items:center;}
 .add-btn{padding:6px 12px; border-radius:12px; font-size:16px; background:var(--accent); color:#333; border:none; cursor:pointer;}
-.card{background:var(--card-bg); border-radius:18px; padding:12px; margin:10px 8px; box-shadow:var(--card-shadow); font-size:16px; transition:transform 0.15s ease, box-shadow 0.15s ease;}
+.scrollable-container { max-height:250px; overflow-y:auto; margin:0 8px 12px; padding-right:4px; }
+.card{background:var(--card-bg); border-radius:18px; padding:12px; margin:10px 0; box-shadow:var(--card-shadow); font-size:16px; transition:transform 0.15s ease, box-shadow 0.15s ease;}
 .card:active{transform:scale(0.98); box-shadow:0 5px 18px rgba(0,0,0,0.15);}
 label{display:block; margin-top:8px; font-size:14px;}
 input[type=text], input[type=number], input[type=date]{padding:8px; border-radius:10px; border:1px solid #ccc; font-size:14px; box-sizing:border-box;}
@@ -35,16 +37,7 @@ input[type=text], input[type=number], input[type=date]{padding:8px; border-radiu
 .slider:before{position:absolute; content:""; height:22px; width:22px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.4s;}
 input:checked + .slider{background-color:var(--paid);}
 input:checked + .slider:before{transform:translateX(22px);}
-#totals {
-  position: sticky;
-  bottom: 0;
-  background: var(--card-bg);
-  padding: 12px;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-  display: flex;
-  justify-content: space-around;
-  font-weight: 600;
-}
+#totals {position:sticky; bottom:0; background: var(--card-bg); padding: 12px; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-around; font-weight: 600;}
 #pickerOverlay{position:fixed; inset:0; background:rgba(0,0,0,0.25); display:none; align-items:flex-end; justify-content:center; z-index:1000;}
 #pickerSheet{background:#fff; width:100%; max-width:400px; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; box-shadow:0 -3px 12px rgba(0,0,0,0.2);}
 .picker-option{padding:14px; border-radius:12px; margin-bottom:6px; text-align:center; background:#f2f2f7; cursor:pointer; transition:all 0.15s ease;}
@@ -60,13 +53,13 @@ input:checked + .slider:before{transform:translateX(22px);}
   <span>Income</span>
   <button class="add-btn" id="addIncomeBtn">➕ Add</button>
 </div>
-<div id="incomeContainer"></div>
+<div id="incomeContainer" class="scrollable-container"></div>
 
 <div class="section-header">
   <span>Bills</span>
   <button class="add-btn" id="addBillBtn">➕ Add</button>
 </div>
-<div id="billContainer"></div>
+<div id="billContainer" class="scrollable-container"></div>
 
 <div id="totals">
 <span id="totalIncome">Income: $0.00</span>
@@ -185,7 +178,7 @@ const incomeTypes=["Salary","Bonus","Freelance","Other"];
 function openPicker(item,input){pickerSheet.innerHTML=""; incomeTypes.forEach(type=>{const option=document.createElement("div"); option.className="picker-option"; option.innerText=type; option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}; pickerSheet.appendChild(option);}); pickerOverlay.style.display="flex";}
 pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
-// Fully fixed Add buttons
+// Add buttons
 document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();}
 document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"", amount:0, due:"", paidDate:""}); save(); render();}
 
