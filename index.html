@@ -31,14 +31,7 @@ input:checked + .slider:before{transform:translateX(16px);}
 
 <header>💰 Paycheck Tracker</header>
 
-<div class="dashboard">
-  <span id="dashIncome">Income: $0</span>
-  <span id="dashBills">Bills: $0</span>
-  <span id="dashLeft">Left: $0</span>
-  <span id="dashPercent">Received: 0%</span>
-</div>
-
-<!-- Mini Calendar -->
+<!-- Month/Year + Mini Calendar -->
 <div class="monthNav">
   <select id="monthSelect"></select>
   <select id="yearSelect"></select>
@@ -52,6 +45,13 @@ input:checked + .slider:before{transform:translateX(16px);}
     </thead>
     <tbody></tbody>
   </table>
+</div>
+
+<div class="dashboard">
+  <span id="dashIncome">Income: $0</span>
+  <span id="dashBills">Bills: $0</span>
+  <span id="dashLeft">Left: $0</span>
+  <span id="dashPercent">Received: 0%</span>
 </div>
 
 <!-- Income Section -->
@@ -73,12 +73,12 @@ let incomes=[]; let bills=[];
 let currentDate=new Date();
 
 function updateDashboard(){
-  let month=incomes.filter(i=>i.date&&new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
-  let billsMonth=bills.filter(b=>b.date&&new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
+  let filteredInc=incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
+  let filteredBills=bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
 
-  let totalInc=month.reduce((a,b)=>a+(+b.actual||0),0);
-  let totalBills=billsMonth.reduce((a,b)=>a+(+b.amount||0),0);
-  let paidInc=month.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
+  let totalInc=filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
+  let totalBills=filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
+  let paidInc=filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
   let percent=totalInc?Math.round((paidInc/totalInc)*100):0;
 
   document.getElementById("dashIncome").innerText=`Income: $${totalInc.toFixed(2)}`;
@@ -103,19 +103,19 @@ function renderMiniCalendar(){
   tbody.appendChild(row);
 }
 
-// Create Income card
+// Income card layout as v40
 function createIncomeCard(i){
   const div=document.createElement("div"); div.className="card";
   const typeInput=document.createElement("input"); typeInput.type="text"; typeInput.value=i.type||"Salary"; typeInput.placeholder="Type (Salary/Other)";
   typeInput.addEventListener("input",e=>{i.type=e.target.value; updateDashboard();});
   const descInput=document.createElement("input"); descInput.type="text"; descInput.value=i.custom||""; descInput.placeholder="Description";
   descInput.addEventListener("input",e=>{i.custom=e.target.value;});
+  const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=i.date||new Date().toISOString().split("T")[0];
+  dateInput.addEventListener("input",e=>{i.date=e.target.value; renderEntries();});
   const expectedInput=document.createElement("input"); expectedInput.type="number"; expectedInput.value=i.expected||0; expectedInput.placeholder="Expected";
   expectedInput.addEventListener("input",e=>{i.expected=parseFloat(e.target.value)||0; updateDashboard();});
   const actualInput=document.createElement("input"); actualInput.type="number"; actualInput.value=i.actual||0; actualInput.placeholder="Actual";
   actualInput.addEventListener("input",e=>{i.actual=parseFloat(e.target.value)||0; updateDashboard();});
-  const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=i.date||new Date().toISOString().split("T")[0];
-  dateInput.addEventListener("input",e=>{i.date=e.target.value; renderEntries();});
 
   const progress=document.createElement("div"); progress.className="progress-container";
   const fill=document.createElement("div"); fill.className="progress-fill"; fill.style.width=`${i.expected?Math.min(i.actual/i.expected,1)*100:0}%`;
@@ -135,15 +135,15 @@ function createIncomeCard(i){
   return div;
 }
 
-// Create Bill card
+// Bills card layout as v40
 function createBillCard(b){
   const div=document.createElement("div"); div.className="card";
   const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.value=b.name||""; nameInput.placeholder="Bill Name";
   nameInput.addEventListener("input",()=>{b.name=nameInput.value;});
-  const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
-  amountInput.addEventListener("input",()=>{b.amount=parseFloat(amountInput.value)||0; updateDashboard();});
   const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=b.date||new Date().toISOString().split("T")[0];
   dateInput.addEventListener("input",()=>{b.date=dateInput.value; renderEntries();});
+  const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
+  amountInput.addEventListener("input",()=>{b.amount=parseFloat(amountInput.value)||0; updateDashboard();});
 
   const paidLabel=document.createElement("label"); paidLabel.className="switch";
   const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!b.paidDate;
@@ -159,12 +159,12 @@ function createBillCard(b){
   return div;
 }
 
-// Render all entries filtered by month
+// Render entries filtered by month
 function renderEntries(){
   const incomeC=document.getElementById("incomeContainer"); const billC=document.getElementById("billContainer");
   incomeC.innerHTML=""; billC.innerHTML="";
-  incomes.filter(i=>i.date&&new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear()).forEach(i=>incomeC.appendChild(createIncomeCard(i)));
-  bills.filter(b=>b.date&&new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear()).forEach(b=>billC.appendChild(createBillCard(b)));
+  incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear()).forEach(i=>incomeC.appendChild(createIncomeCard(i)));
+  bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear()).forEach(b=>billC.appendChild(createBillCard(b)));
   updateDashboard(); renderMiniCalendar();
 }
 
