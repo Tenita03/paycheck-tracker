@@ -13,32 +13,53 @@ header{padding:12px;font-size:28px;text-align:center;}
 #miniCalendar th, #miniCalendar td{width:32px;height:32px;text-align:center;border:1px solid #ccc;}
 #miniCalendar td.today{background:#FFD6A5;border-radius:50%;}
 .section{margin:10px;}
+.section h3{margin-bottom:4px;}
 .entry{background:#fff;border-radius:8px;padding:6px;margin:4px 0;box-shadow:0 2px 4px rgba(0,0,0,0.1);cursor:pointer;}
+.entry.expanded{background:#F2F2F7;}
+.entry input[type=text], .entry input[type=number], .entry input[type=date]{width:100%;padding:4px;margin:2px 0;font-size:14px;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;}
 .addEntryBtn{padding:4px 8px;border-radius:6px;background:#FFD6A5;border:none;cursor:pointer;}
+.switch{position:relative;display:inline-block;width:36px;height:20px;margin-left:4px;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;border-radius:24px;transition:0.4s;}
+.slider:before{position:absolute;content:"";height:16px;width:16px;left:2px;bottom:2px;background:white;border-radius:50%;transition:0.4s;}
+input:checked + .slider{background-color:#B9FBC1;}
+input:checked + .slider:before{transform:translateX(16px);}
+.progress-container{width:100%;background:#E0E0E0;border-radius:6px;height:8px;margin-top:2px;}
+.progress-fill{height:100%;background:#FFD6A5;border-radius:6px;}
 </style>
 </head>
 <body>
+
 <header>💰 Paycheck Tracker</header>
+
 <div class="dashboard">
-<span id="dashIncome">Income: $0</span>
-<span id="dashBills">Bills: $0</span>
-<span id="dashLeft">Left: $0</span>
+  <span id="dashIncome">Income: $0</span>
+  <span id="dashBills">Bills: $0</span>
+  <span id="dashLeft">Left: $0</span>
 </div>
+
 <div class="monthNav">
-<select id="monthSelect"></select>
-<select id="yearSelect"></select>
+  <select id="monthSelect"></select>
+  <select id="yearSelect"></select>
 </div>
-<div>
-<table id="miniCalendar">
-<thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
-<tbody></tbody>
-</table>
+
+<div id="miniCalendarContainer">
+  <table id="miniCalendar">
+    <thead>
+      <tr>
+        <th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
+
 <div class="section">
 <h3>Income</h3>
 <button id="addIncomeBtn" class="addEntryBtn">➕ Add Income</button>
 <div id="incomeContainer"></div>
 </div>
+
 <div class="section">
 <h3>Bills</h3>
 <button id="addBillBtn" class="addEntryBtn">➕ Add Bill</button>
@@ -72,21 +93,86 @@ function renderMiniCalendar(){
   tbody.appendChild(row);
 }
 
+// Helper to create Income entry
+function createIncomeEntry(i){
+  const div=document.createElement("div"); div.className="entry";
+  const header=document.createElement("div"); header.textContent=`${i.type||'Salary'} $${i.actual||0}`;
+  div.appendChild(header);
+
+  div.addEventListener("click",()=>{
+    if(div.classList.contains("expanded")){ div.classList.remove("expanded"); div.innerHTML=""; div.appendChild(header); return; }
+    div.classList.add("expanded"); div.innerHTML="";
+    div.appendChild(header);
+
+    const typeInput=document.createElement("input"); typeInput.type="text"; typeInput.value=i.type; typeInput.placeholder="Type (Salary/Other)";
+    typeInput.addEventListener("input",e=>{i.type=e.target.value; updateDashboard();});
+    const descInput=document.createElement("input"); descInput.type="text"; descInput.value=i.custom||""; descInput.placeholder="Description";
+    descInput.addEventListener("input",e=>{i.custom=e.target.value;});
+    const expectedInput=document.createElement("input"); expectedInput.type="number"; expectedInput.value=i.expected||0; expectedInput.placeholder="Expected";
+    expectedInput.addEventListener("input",e=>{i.expected=parseFloat(e.target.value)||0; updateDashboard();});
+    const actualInput=document.createElement("input"); actualInput.type="number"; actualInput.value=i.actual||0; actualInput.placeholder="Actual";
+    actualInput.addEventListener("input",e=>{i.actual=parseFloat(e.target.value)||0; updateDashboard();});
+    const progress=document.createElement("div"); progress.className="progress-container";
+    const fill=document.createElement("div"); fill.className="progress-fill"; fill.style.width=`${i.expected?Math.min(i.actual/i.expected,1)*100:0}%`;
+    progress.appendChild(fill);
+    const paidLabel=document.createElement("label"); paidLabel.className="switch";
+    const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!i.paidDate;
+    const paidSpan=document.createElement("span"); paidSpan.className="slider";
+    paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
+    const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=i.paidDate||"";
+    paidInput.addEventListener("change",()=>{
+      if(paidInput.checked){ i.paidDate=new Date().toISOString().split("T")[0]; paidDateInput.value=i.paidDate; } else { i.paidDate=""; paidDateInput.value=""; }
+      updateDashboard();
+    });
+    paidDateInput.addEventListener("input",()=>{i.paidDate=paidDateInput.value;});
+    const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
+
+    div.append(typeInput, descInput, expectedInput, actualInput, progress, paidLabel, paidDateInput, removeBtn);
+  });
+  return div;
+}
+
+// Helper to create Bill entry
+function createBillEntry(b){
+  const div=document.createElement("div"); div.className="entry";
+  const header=document.createElement("div"); header.textContent=`${b.name||'Bill'} $${b.amount||0}`;
+  div.appendChild(header);
+
+  div.addEventListener("click",()=>{
+    if(div.classList.contains("expanded")){ div.classList.remove("expanded"); div.innerHTML=""; div.appendChild(header); return; }
+    div.classList.add("expanded"); div.innerHTML="";
+    div.appendChild(header);
+
+    const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.value=b.name||""; nameInput.placeholder="Bill Name";
+    nameInput.addEventListener("input",e=>{b.name=e.target.value;});
+    const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
+    amountInput.addEventListener("input",e=>{b.amount=parseFloat(e.target.value)||0; updateDashboard();});
+    const paidLabel=document.createElement("label"); paidLabel.className="switch";
+    const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!b.paidDate;
+    const paidSpan=document.createElement("span"); paidSpan.className="slider";
+    paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
+    const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=b.paidDate||"";
+    paidInput.addEventListener("change",()=>{
+      if(paidInput.checked){ b.paidDate=new Date().toISOString().split("T")[0]; paidDateInput.value=b.paidDate; } else { b.paidDate=""; paidDateInput.value=""; }
+      updateDashboard();
+    });
+    paidDateInput.addEventListener("input",()=>{b.paidDate=paidDateInput.value;});
+    const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
+
+    div.append(nameInput, amountInput, paidLabel, paidDateInput, removeBtn);
+  });
+  return div;
+}
+
 function renderEntries(){
   const incomeC=document.getElementById("incomeContainer"); const billC=document.getElementById("billContainer");
   incomeC.innerHTML=""; billC.innerHTML="";
-  incomes.forEach((i,index)=>{
-    const div=document.createElement("div"); div.className="entry"; div.textContent=`${i.type||'Salary'} $${i.actual||0}`;
-    incomeC.appendChild(div);
-  });
-  bills.forEach((b,index)=>{
-    const div=document.createElement("div"); div.className="entry"; div.textContent=`${b.name||'Bill'} $${b.amount||0}`;
-    billC.appendChild(div);
-  });
+  incomes.forEach(i=>incomeC.appendChild(createIncomeEntry(i)));
+  bills.forEach(b=>billC.appendChild(createBillEntry(b)));
   updateDashboard(); renderMiniCalendar();
 }
 
-// Month/Year selects
+// Month/Year dropdowns
 const monthSelect=document.getElementById("monthSelect"); const yearSelect=document.getElementById("yearSelect");
 for(let m=0;m<12;m++){ let opt=document.createElement("option"); opt.value=m; opt.text=new Date(2000,m,1).toLocaleString('default',{month:'long'}); monthSelect.appendChild(opt);}
 for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){ let opt=document.createElement("option"); opt.value=y; opt.text=y; yearSelect.appendChild(opt);}
@@ -95,8 +181,8 @@ monthSelect.addEventListener("change",()=>{currentDate.setMonth(parseInt(monthSe
 yearSelect.addEventListener("change",()=>{currentDate.setFullYear(parseInt(yearSelect.value)); renderEntries();});
 
 // Add buttons
-document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary",actual:0}); renderEntries();});
-document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"Bill",amount:0}); renderEntries();});
+document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary",expected:0,actual:0,paidDate:"",custom:""}); renderEntries();});
+document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"Bill",amount:0,paidDate:""}); renderEntries();});
 
 renderEntries();
 </script>
