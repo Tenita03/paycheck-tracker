@@ -3,22 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker Table v31</title>
+<title>Paycheck Tracker Table v32</title>
 <style>
 :root{
   --bg:#F2F2F7; --text:#333; --accent:#FFD8A8;
   --salary:#FFE066; --other:#C084FC; --paid:#4ADE80; --border:#ccc;
 }
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text);}
-#appContainer {
-  width: 100%;
-  height: 90vh;
-  margin: 0;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  box-sizing:border-box;
-}
+#appContainer { width: 100%; height: 90vh; margin:0; padding:8px 12px; display:flex; flex-direction:column; box-sizing:border-box;}
 header{padding:12px; font-size:24px; font-weight:700; text-align:center;}
 .section-header{font-weight:700; font-size:18px; margin:12px 0; display:flex; justify-content:space-between; align-items:center;}
 .add-btn{padding:6px 12px; border-radius:12px; font-size:16px; background:var(--accent); color:#333; border:none; cursor:pointer;}
@@ -40,6 +32,8 @@ input:checked + .slider:before{transform:translateX(18px);}
 .picker-sheet{background:#fff; border-radius:12px; padding:12px; min-width:180px; box-shadow:0 3px 12px rgba(0,0,0,0.2);}
 .picker-option{padding:8px; text-align:center; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:0.15s; background:#F2F2F7;}
 .picker-option:hover{background:#E0E0E0;}
+.progress-container{height:8px; width:100%; background:#e0e0e0; border-radius:4px; margin-top:2px;}
+.progress-bar{height:8px; border-radius:4px; background:#4ADE80;}
 </style>
 </head>
 <body>
@@ -162,7 +156,10 @@ tr.innerHTML=`
 `;
 
 const inputs=tr.querySelectorAll("input");
+
+// Income Type Picker
 inputs[0].onclick=()=>{openPicker(i,inputs[0]);}
+
 inputs[1].oninput=e=>{i.custom=e.target.value; save();}
 inputs[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
 inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); renderTotals();}
@@ -170,6 +167,20 @@ inputs[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
 inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); renderTotals();}
 inputs[4].onchange=e=>{if(inputs[4].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[5].value=today;}else{i.paidDate=""; inputs[5].value="";} save(); render();}
 inputs[5].oninput=e=>{i.paidDate=inputs[5].value; save(); render();}
+
+// Progress bar below actual
+const progressTd=document.createElement("td");
+const container=document.createElement("div");
+container.className="progress-container";
+const bar=document.createElement("div");
+bar.className="progress-bar";
+const percent=Math.min(100,(i.actual/i.expected||0)*100);
+bar.style.width=percent+"%";
+container.appendChild(bar);
+progressTd.appendChild(container);
+tr.appendChild(progressTd);
+
+// Remove button
 tr.querySelector(".removeBtn").addEventListener("click",()=>{incomes.splice(index,1); save(); render();});
 incomeTbody.appendChild(tr);
 });
@@ -186,6 +197,7 @@ tr.innerHTML=`
 <td><input type="date" value="${b.paidDate}"></td>
 <td><button class="removeBtn">🗑️</button></td>
 `;
+
 const inputs=tr.querySelectorAll("input");
 inputs[0].oninput=e=>{b.name=e.target.value; save();}
 inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
@@ -193,6 +205,20 @@ inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTota
 inputs[2].oninput=e=>{b.due=inputs[2].value; save();}
 inputs[3].onchange=e=>{if(inputs[3].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[4].value=today;}else{b.paidDate=""; inputs[4].value="";} save(); render();}
 inputs[4].oninput=e=>{b.paidDate=inputs[4].value; save(); render();}
+
+// Progress bar below amount
+const progressTd=document.createElement("td");
+const container=document.createElement("div");
+container.className="progress-container";
+const bar=document.createElement("div");
+bar.className="progress-bar";
+const percent=Math.min(100,(b.paidDate?1:0)*100);
+bar.style.width=percent+"%";
+container.appendChild(bar);
+progressTd.appendChild(container);
+tr.appendChild(progressTd);
+
+// Remove button
 tr.querySelector(".removeBtn").addEventListener("click",()=>{bills.splice(index,1); save(); render();});
 billTbody.appendChild(tr);
 });
