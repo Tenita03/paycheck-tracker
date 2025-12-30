@@ -3,53 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v22 Complete</title>
+<title>Paycheck Tracker v23</title>
 <style>
 :root{
   --bg:#F2F2F7; --text:#333; --accent:#FFD8A8;
   --income:#FFE066; --bonus:#FF85A2; --freelance:#6EC6FF; --other:#C084FC;
   --paid:#4ADE80; --card-bg:#fff; --card-shadow:0 3px 12px rgba(0,0,0,0.1);
 }
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro";background:var(--bg);color:var(--text);overflow-x:hidden;}
-header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.1);}
-.summary-container{padding:12px;}
-.summary{background:var(--card-bg);border-radius:16px;padding:12px;box-shadow:var(--card-shadow);font-size:16px;font-weight:500;}
-#entries{padding-bottom:140px;}
-.card{background:var(--card-bg);border-radius:16px;padding:12px;margin:10px 12px;box-shadow:var(--card-shadow);transition:transform 0.15s ease,box-shadow 0.15s ease;}
-.card:active{transform:scale(0.98);box-shadow:0 5px 18px rgba(0,0,0,0.15);}
-label{display:block;margin-top:8px;font-size:13px;}
-input[type=text], input[type=number], input[type=date]{width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:14px;margin-top:2px;box-sizing:border-box;}
-.mini-caption{font-size:11px;color:#777;margin-top:2px;}
-.progress-bar-container{height:6px;background:#e5e5e5;border-radius:3px;margin-top:4px;overflow:hidden;}
-.progress-bar{height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s ease;}
-.switch{position:relative;display:inline-block;width:50px;height:28px;}
-.switch input{opacity:0;width:0;height:0;}
-.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;border-radius:28px;transition:0.4s;}
-.slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.4s;}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text);}
+header{position:fixed; top:0; left:0; width:100%; height:70px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:600; background:var(--bg); box-shadow:0 2px 5px rgba(0,0,0,0.1); z-index:10;}
+#scrollContainer{position:absolute; top:70px; bottom:90px; left:0; right:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:10px;}
+.card{background:var(--card-bg); border-radius:18px; padding:16px; margin:10px 12px; box-shadow:var(--card-shadow); font-size:16px; transition:transform 0.15s ease, box-shadow 0.15s ease;}
+.card:active{transform:scale(0.98); box-shadow:0 5px 18px rgba(0,0,0,0.15);}
+label{display:block; margin-top:10px; font-size:14px;}
+input[type=text], input[type=number], input[type=date]{width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:16px; margin-top:4px; box-sizing:border-box;}
+.mini-caption{font-size:12px; color:#777; margin-top:2px;}
+.progress-bar-container{height:8px; background:#e5e5e5; border-radius:4px; margin-top:6px; overflow:hidden;}
+.progress-bar{height:100%; width:0%; background:var(--accent); border-radius:4px; transition:width 0.3s ease;}
+.switch{position:relative; display:inline-block; width:60px; height:32px; margin-top:4px;}
+.switch input{opacity:0; width:0; height:0;}
+.slider{position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:32px; transition:0.4s;}
+.slider:before{position:absolute; content:""; height:26px; width:26px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.4s;}
 input:checked + .slider{background-color:var(--paid);}
-input:checked + .slider:before{transform:translateX(22px);}
-#totals{position:fixed;bottom:0;left:0;width:100%;background:var(--card-bg);padding:10px;box-shadow:0 -2px 5px rgba(0,0,0,0.1);font-weight:600;display:flex;justify-content:space-around;z-index:3;align-items:center;}
-.fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;color:#333;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.2);transition:transform 0.15s ease;z-index:2;}
+input:checked + .slider:before{transform:translateX(28px);}
+#totals{position:fixed; bottom:0; left:0; width:100%; background:var(--card-bg); padding:12px; box-shadow:0 -2px 5px rgba(0,0,0,0.1); font-weight:600; display:flex; justify-content:space-around; font-size:16px; z-index:10; align-items:center;}
+.fab{position:fixed; bottom:30px; right:20px; width:60px; height:60px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:32px; color:#333; cursor:pointer; box-shadow:0 3px 12px rgba(0,0,0,0.2); transition:transform 0.15s ease; z-index:12;}
 .fab:active{transform:scale(0.95);}
-.fab-menu{position:fixed;bottom:80px;right:20px;display:none;flex-direction:column;gap:10px;z-index:2;}
-.fab-menu button{width:150px;border-radius:12px;text-align:center;font-size:14px;}
-#pickerOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.25);display:none;align-items:flex-end;justify-content:center;z-index:1000;}
-#pickerSheet{background:#fff;width:100%;max-width:400px;border-top-left-radius:16px;border-top-right-radius:16px;padding:12px;box-shadow:0 -3px 12px rgba(0,0,0,0.2);}
-.picker-option{padding:12px;border-radius:12px;margin-bottom:6px;text-align:center;background:#f2f2f7;cursor:pointer;transition:all 0.15s ease;}
+.fab-menu{position:fixed; bottom:100px; right:20px; display:none; flex-direction:column; gap:10px; z-index:12;}
+.fab-menu button{width:160px; border-radius:12px; text-align:center; font-size:16px; padding:10px;}
+#pickerOverlay{position:fixed; inset:0; background:rgba(0,0,0,0.25); display:none; align-items:flex-end; justify-content:center; z-index:1000;}
+#pickerSheet{background:#fff; width:100%; max-width:400px; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; box-shadow:0 -3px 12px rgba(0,0,0,0.2);}
+.picker-option{padding:14px; border-radius:12px; margin-bottom:6px; text-align:center; background:#f2f2f7; cursor:pointer; transition:all 0.15s ease;}
 .picker-option:hover{background:#e0e0e0;}
 .draggable{cursor:grab;}
 .draggable:active{cursor:grabbing;}
+.section-header{font-weight:600; font-size:18px; margin:12px 12px 4px 12px;}
 </style>
 </head>
 <body>
 
-<header><h2>💰 Paycheck Tracker</h2></header>
+<header>💰 Paycheck Tracker</header>
 
-<div class="summary-container">
-<div class="summary" id="summary"></div>
+<div id="scrollContainer">
+<div class="section-header">Income</div>
+<div id="incomeContainer"></div>
+<div class="section-header">Bills</div>
+<div id="billContainer"></div>
 </div>
-
-<div id="entries"></div>
 
 <div id="totals">
 <span id="totalIncome">Income: $0.00</span>
@@ -81,17 +81,16 @@ const paidBills=bills.filter(b=>b.paidDate).reduce((t,b)=>t+(+b.amount||0),0);
 document.getElementById("totalIncome").innerText=`Income: ${fmt(totalInc)}`;
 document.getElementById("totalBills").innerText=`Bills: ${fmt(totalBills)}`;
 document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)}`;
-document.getElementById("summary").innerText=`Monthly Income: ${fmt(totalInc)} | Bills: ${fmt(totalBills)} | Left: ${fmt(paidInc-paidBills)}`;
 }
 
 const render=()=>{
-const container=document.getElementById("entries");
-container.innerHTML="";
+const incomeContainer=document.getElementById("incomeContainer");
+const billContainer=document.getElementById("billContainer");
+incomeContainer.innerHTML=""; billContainer.innerHTML="";
 
-// --- Render Incomes ---
+// Render incomes
 incomes.forEach((i,index)=>{
-const card=document.createElement("div");
-card.className="card draggable";
+const card=document.createElement("div"); card.className="card draggable";
 card.innerHTML=`
 <label>Income Type
 <input type="text" readonly value="${i.type||'Salary'}" class="incomeTypeField">
@@ -103,11 +102,11 @@ card.innerHTML=`
 </label>
 <label>Expected Amount ($)
 <input type="text" value="${i.expected||0}">
-<div class="mini-caption">Enter expected income</div>
+<div class="mini-caption">Expected income</div>
 </label>
 <label>Actual Amount ($)
 <input type="text" value="${i.actual||0}">
-<div class="mini-caption">Enter actual income</div>
+<div class="mini-caption">Actual income</div>
 </label>
 <label>Date Paid
 <input type="date" value="${i.paidDate||''}">
@@ -117,32 +116,18 @@ card.innerHTML=`
 <button>🗑️ Remove</button>
 `;
 
-const typeInput=card.querySelector(".incomeTypeField");
-typeInput.onclick=()=>{openPicker(i,typeInput);}
-
-const customInput=card.querySelectorAll("input")[1];
-customInput.oninput=e=>{i.custom=customInput.value; save();}
-
-const expectedInput=card.querySelectorAll("input")[2];
-expectedInput.oninput=e=>expectedInput.value=expectedInput.value.replace(/[^0-9.]/g,'');
-expectedInput.onblur=e=>{i.expected=parseFloat(expectedInput.value)||0; save(); renderTotals(); render();}
-
-const actualInput=card.querySelectorAll("input")[3];
-actualInput.oninput=e=>actualInput.value=actualInput.value.replace(/[^0-9.]/g,'');
-actualInput.onblur=e=>{i.actual=parseFloat(actualInput.value)||0; save(); renderTotals(); render();}
-
-const dateInput=card.querySelectorAll("input")[4];
-dateInput.oninput=e=>{i.paidDate=dateInput.value; save(); renderTotals();}
-
+const typeInput=card.querySelector(".incomeTypeField"); typeInput.onclick=()=>{openPicker(i,typeInput);}
+const customInput=card.querySelectorAll("input")[1]; customInput.oninput=e=>{i.custom=customInput.value; save();}
+const expectedInput=card.querySelectorAll("input")[2]; expectedInput.oninput=e=>expectedInput.value=expectedInput.value.replace(/[^0-9.]/g,''); expectedInput.onblur=e=>{i.expected=parseFloat(expectedInput.value)||0; save(); renderTotals(); render();}
+const actualInput=card.querySelectorAll("input")[3]; actualInput.oninput=e=>actualInput.value=actualInput.value.replace(/[^0-9.]/g,''); actualInput.onblur=e=>{i.actual=parseFloat(actualInput.value)||0; save(); renderTotals(); render();}
+const dateInput=card.querySelectorAll("input")[4]; dateInput.oninput=e=>{i.paidDate=dateInput.value; save(); renderTotals();}
 card.querySelector("button").onclick=()=>{incomes.splice(index,1); save(); render();}
-
-container.appendChild(card);
+incomeContainer.appendChild(card);
 });
 
-// --- Render Bills ---
+// Render bills
 bills.forEach((b,index)=>{
-const card=document.createElement("div");
-card.className="card draggable";
+const card=document.createElement("div"); card.className="card draggable";
 card.innerHTML=`
 <label>Bill Name
 <input type="text" value="${b.name||''}">
@@ -173,72 +158,32 @@ card.innerHTML=`
 
 const inputs=card.querySelectorAll("input");
 inputs[0].oninput=e=>{b.name=inputs[0].value; save();}
-inputs[1].oninput=e=>inputs[1].value=inputs[1].value.replace(/[^0-9.]/g,'');
-inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals(); render();}
+inputs[1].oninput=e=>inputs[1].value=inputs[1].value.replace(/[^0-9.]/g,''); inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals(); render();}
 inputs[2].oninput=e=>{b.due=inputs[2].value; save();}
-inputs[3].onchange=e=>{
-if(inputs[3].checked){const today=new Date().toISOString().split("T")[0];b.paidDate=today; inputs[4].value=today;}
-else{b.paidDate=""; inputs[4].value="";}
-save(); renderTotals();
-}
+inputs[3].onchange=e=>{if(inputs[3].checked){const today=new Date().toISOString().split("T")[0];b.paidDate=today; inputs[4].value=today;}else{b.paidDate=""; inputs[4].value="";} save(); renderTotals();}
 inputs[4].oninput=e=>{b.paidDate=inputs[4].value; save(); renderTotals();}
 card.querySelector("button").onclick=()=>{bills.splice(index,1); save(); render();}
-
-container.appendChild(card);
-});
-
-// --- Drag to reorder ---
-let dragEl=null,dragIndex=-1,dragType="";
-[...document.querySelectorAll(".draggable")].forEach((el,i)=>{
-el.draggable=true;
-el.ondragstart=e=>{dragEl=el; dragIndex=i; dragType=el.parentNode===document.getElementById("entries")?"income":"bill";}
-el.ondragover=e=>e.preventDefault();
-el.ondrop=e=>{
-if(!dragEl||dragEl===el) return;
-const children=[...container.children];
-const targetIndex=children.indexOf(el);
-if(dragType==="income"){
-const moved=incomes.splice(dragIndex,1)[0]; incomes.splice(targetIndex,0,moved);
-}else{
-const moved=bills.splice(dragIndex,1)[0]; bills.splice(targetIndex,0,moved);
-}
-save(); render();
-};
+billContainer.appendChild(card);
 });
 
 renderTotals();
 }
 
-// --- FAB menu ---
-const fab=document.getElementById("fab");
-const fabMenu=document.getElementById("fabMenu");
+// FAB menu
+const fab=document.getElementById("fab"); const fabMenu=document.getElementById("fabMenu");
 fab.onclick=()=>{fabMenu.style.display=fabMenu.style.display==="flex"?"none":"flex";}
 
-// --- Picker ---
-const pickerOverlay=document.getElementById("pickerOverlay");
-const pickerSheet=document.getElementById("pickerSheet");
+// Picker overlay
+const pickerOverlay=document.getElementById("pickerOverlay"); const pickerSheet=document.getElementById("pickerSheet");
 const incomeTypes=["Salary","Bonus","Freelance","Other"];
-function openPicker(item,input){
-pickerSheet.innerHTML="";
-incomeTypes.forEach(type=>{
-const option=document.createElement("div");
-option.className="picker-option";
-option.innerText=type;
-option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}
-pickerSheet.appendChild(option);
-});
-pickerOverlay.style.display="flex";
-}
+function openPicker(item,input){pickerSheet.innerHTML=""; incomeTypes.forEach(type=>{const option=document.createElement("div"); option.className="picker-option"; option.innerText=type; option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}; pickerSheet.appendChild(option);}); pickerOverlay.style.display="flex";}
 pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
-// --- Add Income/Bill ---
-document.getElementById("addIncomeBtn").onclick=()=>{
-incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:""}); save(); render(); fabMenu.style.display="none";}
-document.getElementById("addBillBtn").onclick=()=>{
-bills.push({name:"",amount:0,due:"",paidDate:""}); save(); render(); fabMenu.style.display="none";}
+// Add Income/Bill buttons
+document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:""}); save(); render(); fabMenu.style.display="none";}
+document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",amount:0,due:"",paidDate:""}); save(); render(); fabMenu.style.display="none";}
 
 render();
-});
 </script>
 </body>
 </html>
