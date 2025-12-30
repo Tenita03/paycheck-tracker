@@ -3,16 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — CST Fixed + Month Nav</title>
+<title>Paycheck Tracker — Color-Coded</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
 
-/* Month/year */
-.monthNav{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px;}
-.monthNav button{background:#FFD6A5;border:none;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;}
+/* Month/year navigation */
+.monthNav{
+  display:flex;
+  justify-content:center;  /* center horizontally */
+  align-items:center;
+  gap:6px;
+  margin:10px auto;
+  width:100%;
+}
+.monthNav button, .monthNav select{
+  vertical-align:middle;
+  font-size:14px;
+  padding:4px 8px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+}
 
-/* Compact calendar */
+/* Mini calendar */
 #miniCalendarContainer{width:150px;margin:6px auto;display:flex;justify-content:center;}
 #miniCalendar{width:150px;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{
@@ -103,30 +117,24 @@ input:checked+.slider:before{transform:translateX(16px);}
 </div>
 
 <script>
-/* ---- Utilities ---- */
 function localISODate(y,m,d){
   const mm=String(m+1).padStart(2,'0');
   const dd=String(d).padStart(2,'0');
   return `${y}-${mm}-${dd}`;
 }
-/* Parse stored date as local (not UTC) */
 function parseLocalDate(str){
   if(!str) return null;
   const [y,m,d]=str.split('-').map(Number);
   return new Date(y,m-1,d);
 }
 
-/* ---- Data ---- */
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 let currentDate=new Date();
 let selectedDay=currentDate.getDate();
-function saveData(){
-  localStorage.setItem("incomes",JSON.stringify(incomes));
-  localStorage.setItem("bills",JSON.stringify(bills));
-}
+function saveData(){localStorage.setItem("incomes",JSON.stringify(incomes));
+localStorage.setItem("bills",JSON.stringify(bills));}
 
-/* ---- Month/year selectors ---- */
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
 const prevMonth=document.getElementById("prevMonth");
@@ -162,7 +170,6 @@ nextMonth.onclick=()=>{
   render();
 };
 
-/* ---- Calendar ---- */
 function renderMiniCalendar(){
   const body=document.querySelector("#miniCalendar tbody");
   body.innerHTML="";
@@ -184,7 +191,6 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-/* ---- Dashboard ---- */
 function updateDashboard(){
   const f=e=>{
     const d=parseLocalDate(e.date);
@@ -203,7 +209,6 @@ function updateDashboard(){
   dashProgress.style.width=pct+"%";
 }
 
-/* ---- Render ---- */
 function render(){
   renderMiniCalendar();
   updateDashboard();
@@ -218,6 +223,7 @@ function render(){
   incomes.forEach((i,x)=>{
     if(f(i)){
       const tr=document.createElement("tr");
+      tr.style.background = i.receivedDate ? "#B9FBC1" : "#FFE4E1";
       tr.innerHTML=`
       <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${x}].type=this.value;saveData();"></td>
       <td><input type="text" value="${i.description||''}" onchange="incomes[${x}].description=this.value;saveData();"></td>
@@ -235,6 +241,7 @@ function render(){
   bills.forEach((b,x)=>{
     if(f(b)){
       const tr=document.createElement("tr");
+      tr.style.background = b.paidDate ? "#B9FBC1" : "#FFE4E1";
       tr.innerHTML=`
       <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();"></td>
       <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();"></td>
@@ -247,7 +254,6 @@ function render(){
   });
 }
 
-/* ---- Add Buttons ---- */
 addIncomeBtn.onclick=()=>{
   const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay);
   incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0,receivedDate:''});
@@ -259,7 +265,6 @@ addBillBtn.onclick=()=>{
   saveData();render();
 };
 
-/* ---- Init ---- */
 render();
 window.addEventListener("focusout",()=>render());
 </script>
