@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Color-Coded</title>
+<title>Paycheck Tracker — Centered Calendar & Improved Toggle</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
 
-/* Month/year navigation */
+/* Calendar wrapper */
+#calendarWrapper{width:150px;margin:0 auto;}
 .monthNav{
   display:flex;
-  justify-content:center;  /* center horizontally */
+  justify-content:center;
   align-items:center;
   gap:6px;
-  margin:10px auto;
-  width:100%;
+  margin-bottom:4px;
 }
 .monthNav button, .monthNav select{
   vertical-align:middle;
@@ -27,7 +27,7 @@ header{text-align:center;font-size:28px;padding:12px;}
 }
 
 /* Mini calendar */
-#miniCalendarContainer{width:150px;margin:6px auto;display:flex;justify-content:center;}
+#miniCalendarContainer{width:150px;margin:0 auto;display:flex;justify-content:center;}
 #miniCalendar{width:150px;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{
   width:18px;height:18px;font-size:9px;text-align:center;
@@ -64,7 +64,7 @@ padding:3px 6px;cursor:pointer;font-size:10px;}
 background:#d1d5db;border-radius:24px;transition:.4s;}
 .slider:before{position:absolute;content:"";height:12px;width:12px;left:2px;bottom:2px;
 background:#fff;border-radius:50%;transition:.4s;}
-input:checked+.slider{background:#B9FBC1;}
+input:checked+.slider{background:#4CAF50;border:1px solid #3A8E40;}
 input:checked+.slider:before{transform:translateX(16px);}
 </style>
 </head>
@@ -72,18 +72,21 @@ input:checked+.slider:before{transform:translateX(16px);}
 
 <header>💰 Paycheck Tracker</header>
 
-<div class="monthNav">
-  <button id="prevMonth">◀</button>
-  <select id="monthSelect"></select>
-  <select id="yearSelect"></select>
-  <button id="nextMonth">▶</button>
-</div>
-
-<div id="miniCalendarContainer">
-  <table id="miniCalendar">
-    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
-    <tbody></tbody>
-  </table>
+<div id="calendarWrapper">
+  <div class="monthNav">
+    <button id="prevMonth">◀</button>
+    <select id="monthSelect"></select>
+    <select id="yearSelect"></select>
+    <button id="nextMonth">▶</button>
+  </div>
+  <div id="miniCalendarContainer">
+    <table id="miniCalendar">
+      <thead>
+        <tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 
 <div class="dashboard">
