@@ -3,45 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v27</title>
+<title>Paycheck Tracker Table v28</title>
 <style>
 :root{
   --bg:#F2F2F7; --text:#333; --accent:#FFD8A8;
   --income:#FFE066; --bonus:#FF85A2; --freelance:#6EC6FF; --other:#C084FC;
-  --paid:#4ADE80; --card-bg:#fff; --card-shadow:0 3px 12px rgba(0,0,0,0.1);
+  --paid:#4ADE80; --card-bg:#fff; --border:#ccc;
 }
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text);}
-#appContainer {
-  max-width: 420px;
-  height: 90vh;
-  margin: 0 auto;
-  padding: 8px;
-  display:flex;
-  flex-direction:column;
-  box-sizing:border-box;
-}
+#appContainer {max-width:420px; height:90vh; margin:0 auto; padding:8px; display:flex; flex-direction:column; box-sizing:border-box;}
 header{padding:12px; font-size:22px; font-weight:600; text-align:center;}
-.section-header{font-weight:600; font-size:18px; margin:12px 8px; display:flex; justify-content:space-between; align-items:center;}
+.section-header{font-weight:600; font-size:18px; margin:12px 0; display:flex; justify-content:space-between; align-items:center;}
 .add-btn{padding:6px 12px; border-radius:12px; font-size:16px; background:var(--accent); color:#333; border:none; cursor:pointer;}
-.scrollable-container { max-height:250px; overflow-y:auto; margin:0 8px 12px; padding-right:4px; }
-.card{background:var(--card-bg); border-radius:18px; padding:12px; margin:10px 0; box-shadow:var(--card-shadow); font-size:16px; transition:transform 0.15s ease, box-shadow 0.15s ease;}
-.card:active{transform:scale(0.98); box-shadow:0 5px 18px rgba(0,0,0,0.15);}
-label{display:block; margin-top:8px; font-size:14px;}
-input[type=text], input[type=number], input[type=date]{padding:8px; border-radius:10px; border:1px solid #ccc; font-size:14px; box-sizing:border-box;}
-.mini-caption{font-size:12px; color:#777; margin-top:2px;}
-.progress-bar-container{height:8px; background:#e5e5e5; border-radius:4px; margin-top:6px; overflow:hidden;}
-.progress-bar{height:100%; width:0%; background:var(--accent); border-radius:4px; transition:width 0.3s ease;}
-.switch{position:relative; display:inline-block; width:50px; height:28px;}
+.scrollable-container{max-height:220px; overflow-y:auto; margin-bottom:12px; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+table{width:100%; border-collapse:collapse;}
+th, td{padding:6px 8px; text-align:left; font-size:14px; border-bottom:1px solid var(--border);}
+input[type=text], input[type=number], input[type=date]{width:100%; box-sizing:border-box; padding:4px 6px; border-radius:6px; border:1px solid #ccc; font-size:14px;}
+.switch{position:relative; display:inline-block; width:40px; height:22px;}
 .switch input{opacity:0; width:0; height:0;}
-.slider{position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:28px; transition:0.4s;}
-.slider:before{position:absolute; content:""; height:22px; width:22px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.4s;}
+.slider{position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:22px; transition:0.4s;}
+.slider:before{position:absolute; content:""; height:18px; width:18px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;}
 input:checked + .slider{background-color:var(--paid);}
-input:checked + .slider:before{transform:translateX(22px);}
-#totals {position:sticky; bottom:0; background: var(--card-bg); padding: 12px; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-around; font-weight: 600;}
-#pickerOverlay{position:fixed; inset:0; background:rgba(0,0,0,0.25); display:none; align-items:flex-end; justify-content:center; z-index:1000;}
-#pickerSheet{background:#fff; width:100%; max-width:400px; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; box-shadow:0 -3px 12px rgba(0,0,0,0.2);}
-.picker-option{padding:14px; border-radius:12px; margin-bottom:6px; text-align:center; background:#f2f2f7; cursor:pointer; transition:all 0.15s ease;}
-.picker-option:hover{background:#e0e0e0;}
+input:checked + .slider:before{transform:translateX(18px);}
+#totals {position:sticky; bottom:0; background: #fff; padding:12px; box-shadow:0 -2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-around; font-weight:600;}
 </style>
 </head>
 <body>
@@ -49,17 +33,50 @@ input:checked + .slider:before{transform:translateX(22px);}
 <div id="appContainer">
 <header>💰 Paycheck Tracker</header>
 
-<div class="section-header">
-  <span>Income</span>
-  <button class="add-btn" id="addIncomeBtn">➕ Add</button>
+<div id="incomeSection">
+  <div class="section-header">
+    <span>Income</span>
+    <button class="add-btn" id="addIncomeBtn">➕ Add</button>
+  </div>
+  <div class="scrollable-container">
+    <table id="incomeTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Expected</th>
+          <th>Actual</th>
+          <th>Paid</th>
+          <th>Date Paid</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
-<div id="incomeContainer" class="scrollable-container"></div>
 
-<div class="section-header">
-  <span>Bills</span>
-  <button class="add-btn" id="addBillBtn">➕ Add</button>
+<div id="billSection">
+  <div class="section-header">
+    <span>Bills</span>
+    <button class="add-btn" id="addBillBtn">➕ Add</button>
+  </div>
+  <div class="scrollable-container">
+    <table id="billTable">
+      <thead>
+        <tr>
+          <th>Bill Name</th>
+          <th>Amount</th>
+          <th>Date Due</th>
+          <th>Paid</th>
+          <th>Date Paid</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
-<div id="billContainer" class="scrollable-container"></div>
 
 <div id="totals">
 <span id="totalIncome">Income: $0.00</span>
@@ -67,8 +84,6 @@ input:checked + .slider:before{transform:translateX(22px);}
 <span id="balanceLeft">Left: $0.00</span>
 </div>
 </div>
-
-<div id="pickerOverlay"><div id="pickerSheet"></div></div>
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
@@ -89,94 +104,62 @@ document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)
 }
 
 function render(){
-const incomeContainer=document.getElementById("incomeContainer");
-const billContainer=document.getElementById("billContainer");
-incomeContainer.innerHTML=""; billContainer.innerHTML="";
+const incomeTbody=document.querySelector("#incomeTable tbody");
+const billTbody=document.querySelector("#billTable tbody");
+incomeTbody.innerHTML=""; billTbody.innerHTML="";
 
-// Incomes
+// Income rows
 incomes.forEach((i,index)=>{
-const card=document.createElement("div"); card.className="card";
-card.innerHTML=`
-<label>Income Type
-<input type="text" readonly value="${i.type||'Salary'}" class="incomeTypeField">
-<div class="mini-caption">Tap to select type</div>
-</label>
-<label>Custom Description
-<input type="text" value="${i.custom||''}">
-<div class="mini-caption">Optional description</div>
-</label>
-<label>Amount ($)</label>
-<div style="display:flex; gap:8px; align-items:center;">
-  <input type="text" value="${i.expected||0}" style="flex:0 0 100px;" placeholder="Expected">
-  <input type="text" value="${i.actual||0}" style="flex:0 0 100px;" placeholder="Actual">
-</div>
-<label>Date Paid & Toggle</label>
-<div style="display:flex; gap:8px; align-items:center;">
-  <input type="date" value="${i.paidDate||''}" style="flex:0 0 130px;">
-  <label class="switch">
-    <input type="checkbox" ${i.paidDate?"checked":""}>
-    <span class="slider"></span>
-  </label>
-</div>
-<div class="progress-bar-container"><div class="progress-bar" style="width:${Math.min((i.actual||0)/(i.expected||1)*100,100)}%"></div></div>
-<button>🗑️ Remove</button>
+const tr=document.createElement("tr");
+tr.innerHTML=`
+<td><input type="text" readonly value="${i.type||'Salary'}" class="incomeType"></td>
+<td><input type="text" value="${i.custom||''}"></td>
+<td><input type="text" value="${i.expected||0}"></td>
+<td><input type="text" value="${i.actual||0}"></td>
+<td>
+<label class="switch"><input type="checkbox" ${i.paidDate?"checked":""}><span class="slider"></span></label>
+</td>
+<td><input type="date" value="${i.paidDate||''}"></td>
+<td><button>🗑️</button></td>
 `;
-
-const typeInput=card.querySelector(".incomeTypeField"); typeInput.onclick=()=>{openPicker(i,typeInput);}
-const inputs=card.querySelectorAll("input");
+const inputs=tr.querySelectorAll("input");
 inputs[1].oninput=e=>{i.custom=e.target.value; save();}
 inputs[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); renderTotals(); render();}
+inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); renderTotals();}
 inputs[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); renderTotals(); render();}
-inputs[4].oninput=e=>{i.paidDate=inputs[4].value; save(); renderTotals();}
-inputs[5].onchange=e=>{if(inputs[5].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[4].value=today;}else{i.paidDate=""; inputs[4].value="";} save(); renderTotals();}
-card.querySelector("button").onclick=()=>{incomes.splice(index,1); save(); render();}
-incomeContainer.appendChild(card);
+inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); renderTotals();}
+inputs[4].onchange=e=>{if(inputs[4].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[5].value=today;}else{i.paidDate=""; inputs[5].value="";} save(); renderTotals();}
+inputs[5].oninput=e=>{i.paidDate=inputs[5].value; save(); renderTotals();}
+tr.querySelector("button").onclick=()=>{incomes.splice(index,1); save(); render();}
+incomeTbody.appendChild(tr);
 });
 
-// Bills
+// Bill rows
 bills.forEach((b,index)=>{
-const card=document.createElement("div"); card.className="card";
-card.innerHTML=`
-<label>Bill Name
-<input type="text" value="${b.name||''}">
-<div class="mini-caption">Bill name</div>
-</label>
-<label>Amount ($) & Date Due & Toggle</label>
-<div style="display:flex; gap:8px; align-items:center;">
-  <input type="text" value="${b.amount||0}" style="flex:0 0 100px;" placeholder="Amount">
-  <input type="date" value="${b.due||''}" style="flex:0 0 130px;" placeholder="Due">
-  <label class="switch">
-    <input type="checkbox" ${b.paidDate?"checked":""}>
-    <span class="slider"></span>
-  </label>
-</div>
-<label>Date Paid</label>
-<input type="date" value="${b.paidDate||''}">
-<div class="progress-bar-container"><div class="progress-bar" style="width:${Math.min((b.amount||0)/1000*100,100)}%"></div></div>
-<button>🗑️ Remove</button>
+const tr=document.createElement("tr");
+tr.innerHTML=`
+<td><input type="text" value="${b.name||''}"></td>
+<td><input type="text" value="${b.amount||0}"></td>
+<td><input type="date" value="${b.due||''}"></td>
+<td>
+<label class="switch"><input type="checkbox" ${b.paidDate?"checked":""}><span class="slider"></span></label>
+</td>
+<td><input type="date" value="${b.paidDate||''}"></td>
+<td><button>🗑️</button></td>
 `;
-
-const inputs=card.querySelectorAll("input");
+const inputs=tr.querySelectorAll("input");
 inputs[0].oninput=e=>{b.name=e.target.value; save();}
 inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals(); render();}
+inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals();}
 inputs[2].oninput=e=>{b.due=inputs[2].value; save();}
 inputs[3].onchange=e=>{if(inputs[3].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[4].value=today;}else{b.paidDate=""; inputs[4].value="";} save(); renderTotals();}
 inputs[4].oninput=e=>{b.paidDate=inputs[4].value; save(); renderTotals();}
-card.querySelector("button").onclick=()=>{bills.splice(index,1); save(); render();}
-billContainer.appendChild(card);
+tr.querySelector("button").onclick=()=>{bills.splice(index,1); save(); render();}
+billTbody.appendChild(tr);
 });
 
 renderTotals();
 }
-
-// Picker overlay
-const pickerOverlay=document.getElementById("pickerOverlay"); const pickerSheet=document.getElementById("pickerSheet");
-const incomeTypes=["Salary","Bonus","Freelance","Other"];
-function openPicker(item,input){pickerSheet.innerHTML=""; incomeTypes.forEach(type=>{const option=document.createElement("div"); option.className="picker-option"; option.innerText=type; option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}; pickerSheet.appendChild(option);}); pickerOverlay.style.display="flex";}
-pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
 // Add buttons
 document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();}
@@ -185,5 +168,6 @@ document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"", amount:0
 render();
 });
 </script>
+
 </body>
 </html>
