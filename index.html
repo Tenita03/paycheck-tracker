@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Centered Calendar & Improved Toggle</title>
+<title>Paycheck Tracker — Refined Visuals</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -12,10 +12,11 @@ header{text-align:center;font-size:28px;padding:12px;}
 #calendarWrapper{width:150px;margin:0 auto;}
 .monthNav{
   display:flex;
-  justify-content:center;
+  justify-content:flex-start; /* start from left */
   align-items:center;
   gap:6px;
-  margin-bottom:4px;
+  margin:0 auto 4px auto;
+  transform:translateX(10px); /* slight nudge to right */
 }
 .monthNav button, .monthNav select{
   vertical-align:middle;
@@ -56,8 +57,18 @@ table input[type="text"],table input[type="number"],table input[type="date"]{
 /* Buttons & toggles */
 .addEntryBtn{font-size:13px;padding:6px 10px;border-radius:10px;background:#FFD6A5;
 border:none;cursor:pointer;margin:4px 0;}
-button.removeBtn{background:#FF6B6B;color:#fff;border:none;border-radius:6px;
-padding:3px 6px;cursor:pointer;font-size:10px;}
+button.removeBtn{
+  background:#FFA3A3; /* lighter pastel red */
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  padding:3px 6px;
+  cursor:pointer;
+  font-size:10px;
+}
+button.removeBtn:hover{
+  background:#FF7B7B; /* slightly darker on hover */
+}
 .switch{position:relative;display:inline-block;width:32px;height:16px;}
 .switch input{opacity:0;width:0;height:0;}
 .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;
