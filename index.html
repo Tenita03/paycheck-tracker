@@ -95,7 +95,7 @@ document.getElementById("totalBills").innerText=`Bills: ${fmt(totalBills)}`;
 document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)}`;
 }
 
-const render=()=>{
+function render(){
 const incomeContainer=document.getElementById("incomeContainer");
 const billContainer=document.getElementById("billContainer");
 incomeContainer.innerHTML=""; billContainer.innerHTML="";
@@ -127,11 +127,14 @@ card.innerHTML=`
 <div class="progress-bar-container"><div class="progress-bar" style="width:${Math.min((i.actual||0)/(i.expected||1)*100,100)}%"></div></div>
 <button>🗑️ Remove</button>
 `;
+
 const typeInput=card.querySelector(".incomeTypeField"); typeInput.onclick=()=>{openPicker(i,typeInput);}
-const customInput=card.querySelectorAll("input")[1]; customInput.oninput=e=>{i.custom=customInput.value; save();}
-const expectedInput=card.querySelectorAll("input")[2]; expectedInput.oninput=e=>expectedInput.value=expectedInput.value.replace(/[^0-9.]/g,''); expectedInput.onblur=e=>{i.expected=parseFloat(expectedInput.value)||0; save(); renderTotals(); render();}
-const actualInput=card.querySelectorAll("input")[3]; actualInput.oninput=e=>actualInput.value=actualInput.value.replace(/[^0-9.]/g,''); actualInput.onblur=e=>{i.actual=parseFloat(actualInput.value)||0; save(); renderTotals(); render();}
-const dateInput=card.querySelectorAll("input")[4]; dateInput.oninput=e=>{i.paidDate=dateInput.value; save(); renderTotals();}
+card.querySelectorAll("input")[1].oninput=e=>{i.custom=e.target.value; save();}
+card.querySelectorAll("input")[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+card.querySelectorAll("input")[2].onblur=e=>{i.expected=parseFloat(e.target.value)||0; save(); renderTotals(); render();}
+card.querySelectorAll("input")[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+card.querySelectorAll("input")[3].onblur=e=>{i.actual=parseFloat(e.target.value)||0; save(); renderTotals(); render();}
+card.querySelectorAll("input")[4].oninput=e=>{i.paidDate=e.target.value; save(); renderTotals();}
 card.querySelector("button").onclick=()=>{incomes.splice(index,1); save(); render();}
 incomeContainer.appendChild(card);
 });
@@ -167,10 +170,11 @@ card.innerHTML=`
 <button>🗑️ Remove</button>
 `;
 const inputs=card.querySelectorAll("input");
-inputs[0].oninput=e=>{b.name=inputs[0].value; save();}
-inputs[1].oninput=e=>inputs[1].value=inputs[1].value.replace(/[^0-9.]/g,''); inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals(); render();}
+inputs[0].oninput=e=>{b.name=e.target.value; save();}
+inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals(); render();}
 inputs[2].oninput=e=>{b.due=inputs[2].value; save();}
-inputs[3].onchange=e=>{if(inputs[3].checked){const today=new Date().toISOString().split("T")[0];b.paidDate=today; inputs[4].value=today;}else{b.paidDate=""; inputs[4].value="";} save(); renderTotals();}
+inputs[3].onchange=e=>{if(inputs[3].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[4].value=today;}else{b.paidDate=""; inputs[4].value="";} save(); renderTotals();}
 inputs[4].oninput=e=>{b.paidDate=inputs[4].value; save(); renderTotals();}
 card.querySelector("button").onclick=()=>{bills.splice(index,1); save(); render();}
 billContainer.appendChild(card);
@@ -185,11 +189,12 @@ const incomeTypes=["Salary","Bonus","Freelance","Other"];
 function openPicker(item,input){pickerSheet.innerHTML=""; incomeTypes.forEach(type=>{const option=document.createElement("div"); option.className="picker-option"; option.innerText=type; option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}; pickerSheet.appendChild(option);}); pickerOverlay.style.display="flex";}
 pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
-// Add Income/Bill buttons
-document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:""}); save(); render();}
-document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"",amount:0,due:"",paidDate:""}); save(); render();}
+// Bind Add buttons after DOM is ready
+document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();}
+document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"", amount:0, due:"", paidDate:""}); save(); render();}
 
 render();
+});
 </script>
 </body>
 </html>
