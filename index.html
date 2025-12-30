@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker (CST Fixed)</title>
+<title>Paycheck Tracker — CST Fixed</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -11,20 +11,20 @@ header{text-align:center;font-size:28px;padding:12px;}
 /* Month/year */
 .monthNav{display:flex;justify-content:center;gap:10px;margin:10px;}
 
-/* Compact calendar */
-#miniCalendarContainer{display:flex;justify-content:center;margin:4px 0;}
-#miniCalendar{width:auto;border-collapse:collapse;}
+/* 🗓 Mini calendar (compact) */
+#miniCalendarContainer{width:150px;margin:6px auto;display:flex;justify-content:center;}
+#miniCalendar{width:150px;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{
-  width:20px;height:20px;text-align:center;border:1px solid #ccc;
-  font-size:10px;cursor:pointer;
+  width:18px;height:18px;font-size:9px;text-align:center;
+  border:1px solid #ccc;cursor:pointer;
 }
 #miniCalendar td.today{background:#FFD6A5;border-radius:50%;}
 #miniCalendar td.selected{background:#FFB347;border-radius:50%;}
 
 /* Dashboard */
 .dashboard{display:flex;justify-content:space-around;align-items:center;
-background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:16px;}
-.progress-container{width:80%;height:10px;background:#E0E0E0;border-radius:6px;overflow:hidden;margin-top:4px;}
+background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:15px;}
+.progress-container{width:80%;height:8px;background:#E0E0E0;border-radius:6px;overflow:hidden;margin-top:4px;}
 .progress-fill{height:100%;background:#FFB347;width:0%;transition:width .3s;}
 
 /* Tables */
@@ -54,6 +54,7 @@ input:checked+.slider:before{transform:translateX(16px);}
 </style>
 </head>
 <body>
+
 <header>💰 Paycheck Tracker</header>
 
 <div class="monthNav">
@@ -99,23 +100,24 @@ input:checked+.slider:before{transform:translateX(16px);}
 </div>
 
 <script>
-// ---- Utilities ----
+/* ---- Utilities ---- */
 function localISODate(y,m,d){
   const mm=String(m+1).padStart(2,'0');
   const dd=String(d).padStart(2,'0');
   return `${y}-${mm}-${dd}`;
 }
 
-// ---- Data ----
+/* ---- Data ---- */
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 let currentDate=new Date();
 let selectedDay=currentDate.getDate();
+function saveData(){
+  localStorage.setItem("incomes",JSON.stringify(incomes));
+  localStorage.setItem("bills",JSON.stringify(bills));
+}
 
-function saveData(){localStorage.setItem("incomes",JSON.stringify(incomes));
-localStorage.setItem("bills",JSON.stringify(bills));}
-
-// ---- Dropdowns ----
+/* ---- Month/year selectors ---- */
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
 for(let m=0;m<12;m++){
@@ -132,29 +134,29 @@ yearSelect.value=currentDate.getFullYear();
 monthSelect.onchange=()=>{currentDate.setMonth(+monthSelect.value);render();}
 yearSelect.onchange=()=>{currentDate.setFullYear(+yearSelect.value);render();}
 
-// ---- Calendar ----
+/* ---- Calendar ---- */
 function renderMiniCalendar(){
   const body=document.querySelector("#miniCalendar tbody");
   body.innerHTML="";
   const m=currentDate.getMonth(),y=currentDate.getFullYear();
-  const first=new Date(y,m,1).getDay();
-  const days=new Date(y,m+1,0).getDate();
+  const firstDay=new Date(y,m,1).getDay();
+  const lastDate=new Date(y,m+1,0).getDate();
   let row=document.createElement("tr");
-  for(let i=0;i<first;i++)row.appendChild(document.createElement("td"));
-  for(let d=1;d<=days;d++){
+  for(let i=0;i<firstDay;i++) row.appendChild(document.createElement("td"));
+  for(let d=1;d<=lastDate;d++){
     const td=document.createElement("td");
     td.textContent=d;
     const today=new Date();
-    if(d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear())td.classList.add("today");
-    if(d===selectedDay)td.classList.add("selected");
-    td.onclick=()=>{selectedDay=d;render();}
+    if(d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear()) td.classList.add("today");
+    if(d===selectedDay) td.classList.add("selected");
+    td.onclick=()=>{selectedDay=d;render();};
     row.appendChild(td);
-    if((first+d)%7===0){body.appendChild(row);row=document.createElement("tr");}
+    if((firstDay+d)%7===0){body.appendChild(row);row=document.createElement("tr");}
   }
   if(row.children.length>0)body.appendChild(row);
 }
 
-// ---- Dashboard ----
+/* ---- Dashboard ---- */
 function updateDashboard(){
   const f=e=>new Date(e.date).getMonth()===currentDate.getMonth()&&
               new Date(e.date).getFullYear()===currentDate.getFullYear()&&
@@ -170,7 +172,7 @@ function updateDashboard(){
   dashProgress.style.width=pct+"%";
 }
 
-// ---- Render ----
+/* ---- Render ---- */
 function render(){
   renderMiniCalendar();
   updateDashboard();
@@ -178,8 +180,7 @@ function render(){
               new Date(e.date).getFullYear()===currentDate.getFullYear()&&
               (!selectedDay||new Date(e.date).getDate()===selectedDay);
 
-  const it=document.querySelector("#incomeTable tbody");
-  it.innerHTML="";
+  const it=document.querySelector("#incomeTable tbody");it.innerHTML="";
   incomes.forEach((i,x)=>{
     if(f(i)){
       const tr=document.createElement("tr");
@@ -196,8 +197,7 @@ function render(){
     }
   });
 
-  const bt=document.querySelector("#billTable tbody");
-  bt.innerHTML="";
+  const bt=document.querySelector("#billTable tbody");bt.innerHTML="";
   bills.forEach((b,x)=>{
     if(f(b)){
       const tr=document.createElement("tr");
@@ -213,7 +213,7 @@ function render(){
   });
 }
 
-// ---- Add Buttons ----
+/* ---- Add Buttons ---- */
 addIncomeBtn.onclick=()=>{
   const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay);
   incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0,receivedDate:''});
@@ -225,10 +225,8 @@ addBillBtn.onclick=()=>{
   saveData();render();
 };
 
-// Initial render
+/* ---- Init ---- */
 render();
-
-// Re-render only when focus leaves input fields
 window.addEventListener("focusout",()=>render());
 </script>
 </body>
