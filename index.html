@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker VS40</title>
+<title>Paycheck Tracker VS40 Fixed</title>
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#FDF9F5; color:#333; }
 header { padding:12px; font-size:28px; text-align:center; }
@@ -34,11 +34,11 @@ button.removeBtn { background:#FF6B6B; color:white; border:none; border-radius:8
 
 <header>💰 Paycheck Tracker</header>
 
-<!-- Month/Year + Mini Calendar -->
 <div class="monthNav">
   <select id="monthSelect"></select>
   <select id="yearSelect"></select>
 </div>
+
 <div id="miniCalendarContainer">
   <table id="miniCalendar">
     <thead>
@@ -57,14 +57,12 @@ button.removeBtn { background:#FF6B6B; color:white; border:none; border-radius:8
   <span id="dashPercent">Received: 0%</span>
 </div>
 
-<!-- Income Section -->
 <div class="section">
 <h3>Income</h3>
 <button id="addIncomeBtn" class="addEntryBtn">➕ Add Income</button>
 <div id="incomeContainer"></div>
 </div>
 
-<!-- Bills Section -->
 <div class="section">
 <h3>Bills</h3>
 <button id="addBillBtn" class="addEntryBtn">➕ Add Bill</button>
@@ -75,6 +73,7 @@ button.removeBtn { background:#FF6B6B; color:white; border:none; border-radius:8
 let incomes=[], bills=[];
 let currentDate = new Date();
 
+// --- Dashboard ---
 function updateDashboard() {
   const filteredInc = incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
   const filteredBills = bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
@@ -88,6 +87,7 @@ function updateDashboard() {
   document.getElementById("dashPercent").innerText = `Received: ${percent}%`;
 }
 
+// --- Mini Calendar ---
 function renderMiniCalendar() {
   const tbody=document.querySelector("#miniCalendar tbody"); tbody.innerHTML="";
   const month=currentDate.getMonth(), year=currentDate.getFullYear();
@@ -103,23 +103,21 @@ function renderMiniCalendar() {
   tbody.appendChild(row);
 }
 
-// ----- Card Creation Functions -----
+// --- Card Creation Functions ---
 function createIncomeCard(i) {
   const div=document.createElement("div"); div.className="card";
+
   const typeGroup=document.createElement("div"); typeGroup.className="input-group";
   const typeInput=document.createElement("input"); typeInput.type="text"; typeInput.value=i.type||"Salary"; typeInput.placeholder="Type (Salary/Other)";
-  typeInput.addEventListener("input",e=>i.type=e.target.value);
-  typeGroup.appendChild(typeInput);
+  typeInput.addEventListener("input",e=>i.type=e.target.value); typeGroup.appendChild(typeInput);
 
   const descGroup=document.createElement("div"); descGroup.className="input-group";
   const descInput=document.createElement("input"); descInput.type="text"; descInput.value=i.custom||""; descInput.placeholder="Description";
-  descInput.addEventListener("input",e=>i.custom=e.target.value);
-  descGroup.appendChild(descInput);
+  descInput.addEventListener("input",e=>i.custom=e.target.value); descGroup.appendChild(descInput);
 
   const dateGroup=document.createElement("div"); dateGroup.className="input-group";
   const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=i.date||new Date().toISOString().split("T")[0];
-  dateInput.addEventListener("input",()=>{i.date=dateInput.value; renderEntries();});
-  dateGroup.appendChild(dateInput);
+  dateInput.addEventListener("input",()=>{i.date=dateInput.value; renderEntries();}); dateGroup.appendChild(dateInput);
 
   const amountGroup=document.createElement("div"); amountGroup.className="inline-group";
   const expectedInput=document.createElement("input"); expectedInput.type="number"; expectedInput.value=i.expected||0; expectedInput.placeholder="Expected";
@@ -135,14 +133,14 @@ function createIncomeCard(i) {
   const paidGroup=document.createElement("div"); paidGroup.className="inline-group";
   const paidLabel=document.createElement("label"); paidLabel.className="switch";
   const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!i.paidDate;
-  const paidSpan=document.createElement("span"); paidSpan.className="slider";
-  paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
+  const paidSpan=document.createElement("span"); paidSpan.className="slider"; paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
   const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=i.paidDate||"";
   paidInput.addEventListener("change",()=>{i.paidDate=paidInput.checked?new Date().toISOString().split("T")[0]:""; paidDateInput.value=i.paidDate; updateDashboard();});
   paidDateInput.addEventListener("input",()=>{i.paidDate=paidDateInput.value; updateDashboard();});
   paidGroup.append(paidLabel, paidDateInput);
 
-  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
+  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️";
+  removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
 
   div.append(typeGroup, descGroup, dateGroup, amountGroup, progress, paidGroup, removeBtn);
   return div;
@@ -150,37 +148,36 @@ function createIncomeCard(i) {
 
 function createBillCard(b) {
   const div=document.createElement("div"); div.className="card";
+
   const nameGroup=document.createElement("div"); nameGroup.className="input-group";
   const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.value=b.name||""; nameInput.placeholder="Bill Name";
-  nameInput.addEventListener("input",()=>b.name=nameInput.value);
-  nameGroup.appendChild(nameInput);
+  nameInput.addEventListener("input",()=>b.name=nameInput.value); nameGroup.appendChild(nameInput);
 
   const dateGroup=document.createElement("div"); dateGroup.className="input-group";
   const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=b.date||new Date().toISOString().split("T")[0];
-  dateInput.addEventListener("input",()=>{b.date=dateInput.value; renderEntries();});
-  dateGroup.appendChild(dateInput);
+  dateInput.addEventListener("input",()=>{b.date=dateInput.value; renderEntries();}); dateGroup.appendChild(dateInput);
 
   const amountGroup=document.createElement("div"); amountGroup.className="input-group";
   const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
-  amountInput.addEventListener("input",()=>b.amount=parseFloat(amountInput.value)||0);
-  amountGroup.appendChild(amountInput);
+  amountInput.addEventListener("input",()=>b.amount=parseFloat(amountInput.value)||0); amountGroup.appendChild(amountInput);
 
   const paidGroup=document.createElement("div"); paidGroup.className="inline-group";
   const paidLabel=document.createElement("label"); paidLabel.className="switch";
   const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!b.paidDate;
-  const paidSpan=document.createElement("span"); paidSpan.className="slider";
-  paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
+  const paidSpan=document.createElement("span"); paidSpan.className="slider"; paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
   const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=b.paidDate||"";
   paidInput.addEventListener("change",()=>{b.paidDate=paidInput.checked?new Date().toISOString().split("T")[0]:""; paidDateInput.value=b.paidDate; updateDashboard();});
   paidDateInput.addEventListener("input",()=>{b.paidDate=paidDateInput.value; updateDashboard();});
   paidGroup.append(paidLabel, paidDateInput);
 
-  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
+  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️";
+  removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
 
   div.append(nameGroup, dateGroup, amountGroup, paidGroup, removeBtn);
   return div;
 }
 
+// --- Render ---
 function renderEntries() {
   const incomeC=document.getElementById("incomeContainer"); const billC=document.getElementById("billContainer");
   incomeC.innerHTML=""; billC.innerHTML="";
