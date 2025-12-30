@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v20.1</title>
+<title>Paycheck Tracker v20.2</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
   --bg:#fff7f2;
   --text:#333;
   --accent:#ffd8a8;
-  --income1:#ffe066; /* Salary */
-  --income2:#ff85a2; /* Bonus */
-  --income3:#6ec6ff; /* Freelance */
-  --income4:#c084fc; /* Other */
-  --bill:#ffb3b3;    /* Bill */
-  --paid:#4ade80;    /* Paid */
-  --unpaid:#d1d5db;  /* Unpaid gray */
+  --incomeSalary:#ffe066;
+  --incomeBonus:#ff85a2;
+  --incomeFreelance:#6ec6ff;
+  --incomeOther:#c084fc;
+  --bill:#ffb3b3;
+  --paid:#4ade80;
+  --unpaid:#d1d5db;
   --row-hover:#f0f8ff;
   --filter-bg:#f0f0f0;
   --pill-shadow:0 2px 6px rgba(0,0,0,0.15);
@@ -32,22 +32,22 @@ tbody tr:nth-child(even){background:#fff7cc;}
 tbody tr:hover{background:var(--row-hover);}
 input,select{width:100%;padding:6px;font-size:14px;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;}
 input[type=checkbox]{width:auto;margin-left:5px;}
-.badge{padding:2px 6px;border-radius:6px;color:#333;font-size:13px;margin-left:4px;}
 .summary-container{padding:0 12px;}
 .summary{background:#fffbe6;border-radius:16px;padding:10px;box-shadow:0 2px 5px rgba(0,0,0,.1);font-size:16px;font-weight:500;}
 #dashboard{display:none;padding:12px;margin:12px;background:#fffbe6;border-radius:16px;}
 canvas{max-width:100%;height:200px;}
 #totals{position:fixed;bottom:0;left:0;width:100%;background:#fffbe6;padding:10px;box-shadow:0 -2px 5px rgba(0,0,0,.1);font-weight:600;display:flex;justify-content:space-around;z-index:3;}
 #filterRow input, #filterRow select{background:var(--filter-bg);}
-.pill-container{display:flex;gap:6px;flex-wrap:wrap;}
-.pill{padding:4px 10px;border-radius:20px;cursor:pointer;box-shadow:var(--pill-shadow);transition:all 0.2s;font-size:13px;user-select:none;}
+.pill-container{display:flex;flex-direction:column;gap:4px;}
+.pill{padding:4px 12px;border-radius:20px;cursor:pointer;box-shadow:var(--pill-shadow);transition:all 0.2s;font-size:13px;user-select:none;text-align:center;}
 .pill.active{transform:scale(1.05);box-shadow:0 4px 8px rgba(0,0,0,0.25);}
-.pill.income1{background:linear-gradient(145deg,#ffe066,#ffd933);}
-.pill.income2{background:linear-gradient(145deg,#ff85a2,#ff4f7c);}
-.pill.income3{background:linear-gradient(145deg,#6ec6ff,#3faaff);}
-.pill.income4{background:linear-gradient(145deg,#c084fc,#9c4dff);}
+.pill.salary{background:linear-gradient(145deg,#ffe066,#ffd933);}
+.pill.bonus{background:linear-gradient(145deg,#ff85a2,#ff4f7c);}
+.pill.freelance{background:linear-gradient(145deg,#6ec6ff,#3faaff);}
+.pill.other{background:linear-gradient(145deg,#c084fc,#9c4dff);}
 .pill.paid{background:linear-gradient(145deg,#4ade80,#22c55e);}
 .pill.unpaid{background:linear-gradient(145deg,#d1d5db,#9ca3af);}
+.mini-caption{font-size:11px;color:#777;margin-top:2px;}
 .dragging{background:#e0f7ff !important;}
 </style>
 </head>
@@ -117,7 +117,6 @@ let quickSummary=false;
 
 const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes));localStorage.setItem("bills",JSON.stringify(bills));}
 const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
-
 const exportCSV=()=>{
 let csv="Category,Type,Custom Type,Expected,Actual,Date Due,Date Paid,Paid?\n";
 incomes.forEach(i=>csv+=`Income,${i.type||''},${i.customType||''},${i.expected||0},${i.actual||0},,${i.paidDate||''},${i.paidDate?'Yes':'No'}\n`);
@@ -139,18 +138,21 @@ document.getElementById("totalBills").innerText=`Bills: ${fmt(totalBills)}`;
 document.getElementById("balanceLeft").innerText=`Left: ${fmt(paidInc-paidBills)}`;
 }
 
-// Function to create glossy pill selector
-function createPillSelector(options, current, onChange, classes){
+// Create vertical pill selector
+function createVerticalPills(options, current, onChange, classes, tooltips={}){
 const container=document.createElement("div");
 container.className="pill-container";
 options.forEach(opt=>{
 const pill=document.createElement("div");
 pill.className="pill "+classes[opt];
 pill.innerText=opt;
-if(opt===current)pill.classList.add("active");
+if(current===opt)pill.classList.add("active");
+if(tooltips[opt])pill.title=tooltips[opt];
 pill.onclick=()=>{options.forEach(o=>container.querySelector(".pill."+classes[o])?.classList.remove("active"));pill.classList.add("active"); onChange(opt);}
 container.appendChild(pill);
+return container;
 });
+container.appendChild(container);
 return container;
 }
 
@@ -173,14 +175,14 @@ if(filterPaid==="unpaid"&& r.paidDate)return;
 
 const tr=document.createElement("tr");
 if(r.type==="income"){
-tr.innerHTML=`<td>Income</td><td></td><td><input type="text" value="${r.customType||''}"></td>
-<td><input type="text" value="${r.expected||0}"></td>
-<td><input type="text" value="${r.actual||0}"></td>
-<td>-</td><td><input type="date" value="${r.paidDate||''}"></td><td>-</td>
+tr.innerHTML=`<td>Income</td><td></td><td><input type="text" value="${r.customType||''}"><div class="mini-caption">Optional description</div></td>
+<td><input type="text" value="${r.expected||0}"><div class="mini-caption">Enter expected amount</div></td>
+<td><input type="text" value="${r.actual||0}"><div class="mini-caption">Enter actual amount</div></td>
+<td>-</td><td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td><td>-</td>
 <td>${fmt((r.actual||0)-(r.expected||0))}</td><td><button>🗑️</button></td>`;
 
 const selCell=tr.children[1];
-const typePill=createPillSelector(["Salary","Bonus","Freelance","Other"],r.type,opt=>{incomes[r.index].type=opt; renderTotals();}, {Salary:"income1",Bonus:"income2",Freelance:"income3",Other:"income4"});
+const typePill=createVerticalPills(["Salary","Bonus","Freelance","Other"],r.type,opt=>{incomes[r.index].type=opt; renderTotals();}, {Salary:"salary",Bonus:"bonus",Freelance:"freelance",Other:"other"}, {Salary:"Regular job income",Bonus:"Bonus or performance pay",Freelance:"Contract/side gig",Other:"Misc income"});
 selCell.appendChild(typePill);
 
 const ct=tr.children[2].querySelector("input");
@@ -194,13 +196,12 @@ exp.oninput=e=>exp.value=exp.value.replace(/[^0-9.]/g,""); exp.onblur=e=>{income
 act.oninput=e=>act.value=act.value.replace(/[^0-9.]/g,""); act.onblur=e=>{incomes[r.index].actual=parseFloat(act.value)||0; renderTotals();}
 pd.oninput=e=>incomes[r.index].paidDate=pd.value;
 del.onclick=e=>{incomes.splice(r.index,1); render();}
-
 } else {
-tr.innerHTML=`<td>Bill</td><td><input type="text" value="${r.name||''}"></td><td>-</td>
-<td><input type="text" value="${r.amount||0}"></td>
+tr.innerHTML=`<td>Bill</td><td><input type="text" value="${r.name||''}"><div class="mini-caption">Bill name</div></td><td>-</td>
+<td><input type="text" value="${r.amount||0}"><div class="mini-caption">Amount due</div></td>
 <td>-</td>
-<td><input type="date" value="${r.due||''}"></td>
-<td><input type="date" value="${r.paidDate||''}"></td>
+<td><input type="date" value="${r.due||''}"><div class="mini-caption">Date due</div></td>
+<td><input type="date" value="${r.paidDate||''}"><div class="mini-caption">Date paid</div></td>
 <td></td><td>-</td><td><button>🗑️</button></td>`;
 
 const nameI=tr.children[1].querySelector("input");
@@ -210,7 +211,7 @@ const paidI=tr.children[6].querySelector("input");
 const paidCell=tr.children[7];
 const del=tr.children[9].querySelector("button");
 
-const paidPill=createPillSelector(["Unpaid","Paid"], r.paidDate?"Paid":"Unpaid", val=>{
+const paidPill=createVerticalPills(["Unpaid","Paid"], r.paidDate?"Paid":"Unpaid", val=>{
 if(val==="Paid"){const today=new Date().toISOString().split("T")[0];paidI.value=today; bills[r.index].paidDate=today;}
 else{paidI.value=""; bills[r.index].paidDate="";}
 renderTotals();
@@ -241,7 +242,6 @@ document.getElementById(id).addEventListener("input",render);
 });
 
 render();
-});
 </script>
 </body>
 </html>
