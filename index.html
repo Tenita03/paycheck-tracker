@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v41+</title>
+<title>Paycheck Tracker v41+ Calendar</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
@@ -11,10 +11,13 @@
   --border:#E0E0E0; --progress-bg:#E0E0E0; --progress-fill:#FFD6A5;
 }
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text);}
-header{padding:12px; font-size:26px; font-weight:700; text-align:center;}
+header{padding:12px; font-size:28px; font-weight:700; text-align:center;}
 .dashboard{display:flex; justify-content:space-around; font-weight:700; padding:10px 0; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.1); margin:0 10px 10px;}
-.controls{display:flex; justify-content:space-between; align-items:center; margin:0 10px 6px;}
-.controls button{padding:6px 12px; border-radius:10px; background:var(--accent); border:none; font-weight:700; cursor:pointer;}
+.monthNav{display:flex; justify-content:center; align-items:center; gap:10px; margin:0 10px 10px;}
+.monthLabel{font-size:24px; font-weight:700;}
+.monthGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 10px 10px;}
+.monthBox{padding:8px 0; text-align:center; background:#fff; border-radius:12px; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:0.15s;}
+.monthBox:hover{background:var(--accent);}
 .section{margin:10px;}
 .section h3{margin:4px 0;}
 .entry{background:#fff; border-radius:10px; padding:6px; margin:4px 0; box-shadow:0 2px 4px rgba(0,0,0,0.08); cursor:pointer;}
@@ -33,18 +36,21 @@ input:checked + .slider:before{transform:translateX(16px);}
 </head>
 <body>
 
-<header>💰 Paycheck Tracker v41+</header>
+<header>💰 Paycheck Tracker</header>
 <div class="dashboard">
   <span id="dashIncome">Income: $0.00</span>
   <span id="dashBills">Bills: $0.00</span>
   <span id="dashLeft">Left: $0.00</span>
   <span id="dashPercent">Received: 0%</span>
 </div>
-<div class="controls">
-  <button id="prevMonth">&lt; Prev</button>
-  <span id="monthLabel"></span>
-  <button id="nextMonth">Next &gt;</button>
+
+<div class="monthNav">
+  <button id="prevMonth">&lt;</button>
+  <div class="monthLabel" id="monthLabel"></div>
+  <button id="nextMonth">&gt;</button>
 </div>
+
+<div class="monthGrid" id="monthGrid"></div>
 
 <div class="section">
 <h3>Income</h3>
@@ -105,8 +111,8 @@ function createIncomeEntry(i){
     const switchInput=document.createElement("input"); switchInput.type="checkbox"; switchInput.checked=!!i.paidDate;
     const switchSpan=document.createElement("span"); switchSpan.className="slider";
     switchLabel.appendChild(switchInput); switchLabel.appendChild(switchSpan);
-    switchInput.addEventListener("change",()=>{if(switchInput.checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; datePaidInput.value=today;}else{i.paidDate=""; datePaidInput.value="";} save(); renderEntries();});
     const datePaidInput=document.createElement("input"); datePaidInput.type="date"; datePaidInput.value=i.paidDate||"";
+    switchInput.addEventListener("change",()=>{if(switchInput.checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; datePaidInput.value=today;}else{i.paidDate=""; datePaidInput.value="";} save(); renderEntries();});
     datePaidInput.addEventListener("input",()=>{i.paidDate=datePaidInput.value; save();});
     const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️";
     removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); save(); renderEntries();});
@@ -129,8 +135,8 @@ function createBillEntry(b){
     const switchInput=document.createElement("input"); switchInput.type="checkbox"; switchInput.checked=!!b.paidDate;
     const switchSpan=document.createElement("span"); switchSpan.className="slider";
     switchLabel.appendChild(switchInput); switchLabel.appendChild(switchSpan);
-    switchInput.addEventListener("change",()=>{if(switchInput.checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; datePaidInput.value=today;}else{b.paidDate=""; datePaidInput.value="";} save(); renderEntries();});
     const datePaidInput=document.createElement("input"); datePaidInput.type="date"; datePaidInput.value=b.paidDate||"";
+    switchInput.addEventListener("change",()=>{if(switchInput.checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; datePaidInput.value=today;}else{b.paidDate=""; datePaidInput.value="";} save(); renderEntries();});
     datePaidInput.addEventListener("input",()=>{b.paidDate=datePaidInput.value; save();});
     const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️";
     removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); save(); renderEntries();});
@@ -140,23 +146,46 @@ function createBillEntry(b){
 }
 
 function renderEntries(){
-const monthStr=getMonthString(currentDate);
-document.getElementById("monthLabel").innerText=formatMonthYear(currentDate);
-const incomeContainer=document.getElementById("incomeContainer");
-const billContainer=document.getElementById("billContainer");
-incomeContainer.innerHTML=""; billContainer.innerHTML="";
-incomes.filter(i=>i.date.startsWith(monthStr)).forEach(i=>incomeContainer.appendChild(createIncomeEntry(i)));
-bills.filter(b=>b.due.startsWith(monthStr)).forEach(b=>billContainer.appendChild(createBillEntry(b)));
-updateDashboard();
+  const monthStr=getMonthString(currentDate);
+  document.getElementById("monthLabel").innerText=formatMonthYear(currentDate);
+  const incomeContainer=document.getElementById("incomeContainer");
+  const billContainer=document.getElementById("billContainer");
+  incomeContainer.innerHTML=""; billContainer.innerHTML="";
+  incomes.filter(i=>i.date.startsWith(monthStr)).forEach(i=>incomeContainer.appendChild(createIncomeEntry(i)));
+  bills.filter(b=>b.due.startsWith(monthStr)).forEach(b=>billContainer.appendChild(createBillEntry(b)));
+  updateDashboard();
 }
 
-// Add buttons
-document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:"", date:currentDate.toISOString().split("T")[0]}); save(); renderEntries();});
-document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"", amount:0, due:currentDate.toISOString().split("T")[0], paidDate:""}); save(); renderEntries();});
-
-// Month navigation
+// Month navigation buttons
 document.getElementById("prevMonth").addEventListener("click",()=>{currentDate.setMonth(currentDate.getMonth()-1); renderEntries();});
 document.getElementById("nextMonth").addEventListener("click",()=>{currentDate.setMonth(currentDate.getMonth()+1); renderEntries();});
+
+// Month grid (year overview)
+function renderMonthGrid(){
+  const monthGrid=document.getElementById("monthGrid");
+  monthGrid.innerHTML="";
+  for(let m=0;m<12;m++){
+    const box=document.createElement("div"); box.className="monthBox"; box.textContent=new Date(currentDate.getFullYear(),m,1).toLocaleString('default',{month:'short'});
+    box.addEventListener("click",()=>{currentDate.setMonth(m); renderEntries();});
+    monthGrid.appendChild(box);
+  }
+}
+
+renderMonthGrid();
+
+// Add buttons
+document.getElementById("addIncomeBtn").addEventListener("click", () => {
+  const monthStr = getMonthString(currentDate);
+  const newDate = `${monthStr}-01`;
+  incomes.push({ type: "Salary", custom: "", expected: 0, actual: 0, paidDate: "", date: newDate });
+  save(); renderEntries();
+});
+document.getElementById("addBillBtn").addEventListener("click", () => {
+  const monthStr = getMonthString(currentDate);
+  const newDate = `${monthStr}-01`;
+  bills.push({ name: "", amount: 0, due: newDate, paidDate: "" });
+  save(); renderEntries();
+});
 
 renderEntries();
 });
