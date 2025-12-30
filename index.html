@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — CST Fixed</title>
+<title>Paycheck Tracker — CST Fixed + Month Nav</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
 
 /* Month/year */
-.monthNav{display:flex;justify-content:center;gap:10px;margin:10px;}
+.monthNav{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px;}
+.monthNav button{background:#FFD6A5;border:none;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;}
 
-/* 🗓 Mini calendar (compact) */
+/* Compact calendar */
 #miniCalendarContainer{width:150px;margin:6px auto;display:flex;justify-content:center;}
 #miniCalendar{width:150px;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{
@@ -58,8 +59,10 @@ input:checked+.slider:before{transform:translateX(16px);}
 <header>💰 Paycheck Tracker</header>
 
 <div class="monthNav">
+  <button id="prevMonth">◀</button>
   <select id="monthSelect"></select>
   <select id="yearSelect"></select>
+  <button id="nextMonth">▶</button>
 </div>
 
 <div id="miniCalendarContainer">
@@ -106,6 +109,12 @@ function localISODate(y,m,d){
   const dd=String(d).padStart(2,'0');
   return `${y}-${mm}-${dd}`;
 }
+/* Parse stored date as local (not UTC) */
+function parseLocalDate(str){
+  if(!str) return null;
+  const [y,m,d]=str.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
 
 /* ---- Data ---- */
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
@@ -120,6 +129,9 @@ function saveData(){
 /* ---- Month/year selectors ---- */
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
+const prevMonth=document.getElementById("prevMonth");
+const nextMonth=document.getElementById("nextMonth");
+
 for(let m=0;m<12;m++){
   const o=document.createElement("option");
   o.value=m;o.text=new Date(2000,m,1).toLocaleString('default',{month:'short'});
@@ -131,8 +143,24 @@ for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){
 }
 monthSelect.value=currentDate.getMonth();
 yearSelect.value=currentDate.getFullYear();
+
 monthSelect.onchange=()=>{currentDate.setMonth(+monthSelect.value);render();}
 yearSelect.onchange=()=>{currentDate.setFullYear(+yearSelect.value);render();}
+
+prevMonth.onclick=()=>{
+  currentDate.setMonth(currentDate.getMonth()-1);
+  selectedDay=null;
+  monthSelect.value=currentDate.getMonth();
+  yearSelect.value=currentDate.getFullYear();
+  render();
+};
+nextMonth.onclick=()=>{
+  currentDate.setMonth(currentDate.getMonth()+1);
+  selectedDay=null;
+  monthSelect.value=currentDate.getMonth();
+  yearSelect.value=currentDate.getFullYear();
+  render();
+};
 
 /* ---- Calendar ---- */
 function renderMiniCalendar(){
@@ -158,9 +186,12 @@ function renderMiniCalendar(){
 
 /* ---- Dashboard ---- */
 function updateDashboard(){
-  const f=e=>new Date(e.date).getMonth()===currentDate.getMonth()&&
-              new Date(e.date).getFullYear()===currentDate.getFullYear()&&
-              (!selectedDay||new Date(e.date).getDate()===selectedDay);
+  const f=e=>{
+    const d=parseLocalDate(e.date);
+    return d && d.getMonth()===currentDate.getMonth() &&
+           d.getFullYear()===currentDate.getFullYear() &&
+           (!selectedDay || d.getDate()===selectedDay);
+  };
   const inc=incomes.filter(f),bil=bills.filter(f);
   const incAct=inc.reduce((s,i)=>s+(+i.actual||0),0);
   const incExp=inc.reduce((s,i)=>s+(+i.expected||0),0);
@@ -176,9 +207,12 @@ function updateDashboard(){
 function render(){
   renderMiniCalendar();
   updateDashboard();
-  const f=e=>new Date(e.date).getMonth()===currentDate.getMonth()&&
-              new Date(e.date).getFullYear()===currentDate.getFullYear()&&
-              (!selectedDay||new Date(e.date).getDate()===selectedDay);
+  const f=e=>{
+    const d=parseLocalDate(e.date);
+    return d && d.getMonth()===currentDate.getMonth() &&
+           d.getFullYear()===currentDate.getFullYear() &&
+           (!selectedDay || d.getDate()===selectedDay);
+  };
 
   const it=document.querySelector("#incomeTable tbody");it.innerHTML="";
   incomes.forEach((i,x)=>{
