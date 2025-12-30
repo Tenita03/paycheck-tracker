@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Fixed Running Totals</title>
+<title>Paycheck Tracker — Fixed Totals</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -139,39 +139,39 @@ function renderMiniCalendar(){
 
 // Update dashboard with fixed running totals
 function updateDashboard(){
-  const y=currentDate.getFullYear();
-  const m=currentDate.getMonth();
+  const y = currentDate.getFullYear();
+  const m = currentDate.getMonth();
 
-  let carryover=0;
+  let carryover = 0;
   for(let i=0;i<m;i++){
-    const prevIncome=incomes.filter(e=>{const d=parseLocalDate(e.date);return d&&d.getFullYear()===y&&d.getMonth()===i;}).reduce((s,e)=>s+(+e.actual||0),0);
-    const prevBills=bills.filter(b=>{const d=parseLocalDate(b.date);return d&&d.getFullYear()===y&&d.getMonth()===i;}).reduce((s,b)=>s+(+b.amount||0),0);
-    carryover+=prevIncome-prevBills;
+    carryover += incomes.filter(e=>{const d=parseLocalDate(e.date);return d&&d.getFullYear()===y&&d.getMonth()===i;})
+      .reduce((s,e)=>s + (parseFloat(e.actual)||0),0);
+    carryover -= bills.filter(b=>{const d=parseLocalDate(b.date);return d&&d.getFullYear()===y&&d.getMonth()===i;})
+      .reduce((s,b)=>s + (parseFloat(b.amount)||0),0);
   }
 
-  const currentIncome=incomes.filter(e=>{
+  const currentIncome = incomes.filter(e=>{
     const d=parseLocalDate(e.date);if(!d)return false;
     return d.getFullYear()===y&&d.getMonth()===m&&(!selectedDay||d.getDate()<=selectedDay);
-  }).reduce((s,i)=>s+(+i.actual||0),0);
+  }).reduce((s,e)=>s+(parseFloat(e.actual)||0),0);
 
-  const billsThisMonth=bills.filter(b=>{
+  const billsThisMonth = bills.filter(b=>{
     const d=parseLocalDate(b.date);
     return d&&d.getFullYear()===y&&d.getMonth()===m;
-  }).reduce((s,b)=>s+(+b.amount||0),0);
+  }).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
 
-  const earlyPaid=bills.filter(b=>{
+  const earlyPaid = bills.filter(b=>{
     const paid=parseLocalDate(b.paidDate);
     const due=parseLocalDate(b.date);
     return paid&&paid.getFullYear()===y&&paid.getMonth()===m&&due.getMonth()>m;
-  }).reduce((s,b)=>s+(+b.amount||0),0);
+  }).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
 
-  const totalIncome=carryover+currentIncome;
-  const totalBills=billsThisMonth;
-  const leftover=totalIncome-totalBills-earlyPaid;
+  const totalIncome = carryover + currentIncome;
+  const leftover = totalIncome - billsThisMonth - earlyPaid;
 
-  document.getElementById("dashIncome").textContent=totalIncome.toFixed(2);
-  document.getElementById("dashBills").textContent=totalBills.toFixed(2);
-  document.getElementById("dashLeft").textContent=leftover.toFixed(2);
+  document.getElementById("dashIncome").textContent = totalIncome.toFixed(2);
+  document.getElementById("dashBills").textContent = billsThisMonth.toFixed(2);
+  document.getElementById("dashLeft").textContent = leftover.toFixed(2);
 }
 
 // Render tables
@@ -188,8 +188,8 @@ function render(){
       <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${x}].type=this.value;saveData();"></td>
       <td><input type="text" value="${i.description||''}" onchange="incomes[${x}].description=this.value;saveData();"></td>
       <td><input type="date" value="${i.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="incomes[${x}].date=this.value;saveData();"></td>
-      <td><input type="number" placeholder="$0.00" value="${i.expected||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].expected=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
-      <td><input type="number" placeholder="$0.00" value="${i.actual||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].actual=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
+      <td><input type="number" placeholder="$0.00" value="${i.expected||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].expected=parseFloat(this.value)||0;saveData();"></td>
+      <td><input type="number" placeholder="$0.00" value="${i.actual||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].actual=parseFloat(this.value)||0;saveData();"></td>
       <td><button class='removeBtn' onclick='incomes.splice(${x},1);saveData();render();'>🗑️</button></td>`;it.appendChild(tr);}
   });
 
@@ -201,7 +201,7 @@ function render(){
       tr.innerHTML=`
       <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();"></td>
       <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();"></td>
-      <td><input type="number" placeholder="$0.00" value="${b.amount||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="bills[${x}].amount=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
+      <td><input type="number" placeholder="$0.00" value="${b.amount||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="bills[${x}].amount=parseFloat(this.value)||0;saveData();"></td>
       <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();render();"><span class='slider'></span></label></td>
       <td><input type="date" value="${b.paidDate||''}" onchange="bills[${x}].paidDate=this.value;saveData();"></td>
       <td><button class='removeBtn' onclick='bills.splice(${x},1);saveData();render();'>🗑️</button></td>`;bt.appendChild(tr);}
