@@ -3,30 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v40 Styled</title>
+<title>Paycheck Tracker VS40</title>
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#FDF9F5; color:#333; }
 header { padding:12px; font-size:28px; text-align:center; }
-.dashboard { display:flex; justify-content:space-around; padding:10px; background:#fff; border-radius:10px; margin:0 10px; }
+.dashboard { display:flex; justify-content:space-around; padding:10px; background:#fff; border-radius:10px; margin:0 10px; font-size:16px; }
 .monthNav { display:flex; justify-content:center; gap:10px; margin:10px; }
 #miniCalendar { border-collapse:collapse; margin:auto; }
-#miniCalendar th,#miniCalendar td { width:32px; height:32px; text-align:center; border:1px solid #ccc; }
+#miniCalendar th,#miniCalendar td { width:32px; height:32px; text-align:center; border:1px solid #ccc; font-size:14px; }
 #miniCalendar td.today { background:#FFD6A5; border-radius:50%; }
 .section { margin:10px; }
-.section h3 { margin:4px 0; }
-.card { background:#fff; border-radius:12px; padding:14px; margin:8px 0; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-.input-group { display:flex; flex-direction:column; margin-bottom:6px; }
-.input-group input { padding:8px; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+.section h3 { margin:6px 0; font-size:18px; }
+.card { background:#fff; border-radius:12px; padding:10px; margin:6px 0; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+.input-group { display:flex; flex-direction:column; margin-bottom:4px; }
+.input-group input { padding:6px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
 .inline-group { display:flex; gap:6px; align-items:center; }
-.addEntryBtn { padding:8px 12px; border-radius:12px; background:#FFD6A5; border:none; cursor:pointer; margin-bottom:8px; font-size:16px; }
+.addEntryBtn { padding:6px 10px; border-radius:12px; background:#FFD6A5; border:none; cursor:pointer; margin-bottom:6px; font-size:14px; }
 .switch { position:relative; display:inline-block; width:36px; height:20px; }
 .switch input { opacity:0; width:0; height:0; }
 .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:24px; transition:0.4s; }
 .slider:before { position:absolute; content:""; height:16px; width:16px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s; }
 input:checked + .slider { background-color:#B9FBC1; }
 input:checked + .slider:before { transform:translateX(16px); }
-.progress-container { width:100%; background:#E0E0E0; border-radius:6px; height:8px; margin-top:4px; }
+.progress-container { width:100%; background:#E0E0E0; border-radius:6px; height:6px; margin-top:4px; }
 .progress-fill { height:100%; background:#FFD6A5; border-radius:6px; }
+button.removeBtn { background:#FF6B6B; color:white; border:none; border-radius:8px; padding:4px 8px; cursor:pointer; font-size:12px; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -141,7 +142,7 @@ function createIncomeCard(i) {
   paidDateInput.addEventListener("input",()=>{i.paidDate=paidDateInput.value; updateDashboard();});
   paidGroup.append(paidLabel, paidDateInput);
 
-  const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
+  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
 
   div.append(typeGroup, descGroup, dateGroup, amountGroup, progress, paidGroup, removeBtn);
   return div;
@@ -174,7 +175,7 @@ function createBillCard(b) {
   paidDateInput.addEventListener("input",()=>{b.paidDate=paidDateInput.value; updateDashboard();});
   paidGroup.append(paidLabel, paidDateInput);
 
-  const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
+  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
 
   div.append(nameGroup, dateGroup, amountGroup, paidGroup, removeBtn);
   return div;
