@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v36</title>
+<title>Paycheck Tracker v37</title>
 <style>
 :root{
   --bg:#FDF6EC; --text:#333; --accent:#FFD8A8;
@@ -96,6 +96,7 @@ input:checked + .slider:before{transform:translateX(18px);}
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
+
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 
@@ -146,7 +147,7 @@ incomes.forEach((i,index)=>{
 const tr=document.createElement("tr");
 tr.className=i.paidDate?"paidRow":"";
 tr.innerHTML=`
-<td><input type="text" readonly value="${i.type}" class="incomeType" style="background:${i.type==='Salary'? 'var(--salary)':'var(--other)'}"></td>
+<td><input type="text" readonly value="${i.type}" style="background:${i.type==='Salary'? 'var(--salary)':'var(--other)'}"></td>
 <td><input type="text" value="${i.custom}"></td>
 <td><input type="text" value="${i.expected}"></td>
 <td><input type="text" value="${i.actual}"></td>
@@ -194,11 +195,12 @@ billTbody.appendChild(tr);
 updateDashboard();
 }
 
-// Add buttons
+// Add buttons (attach once)
 document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();});
 document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"", amount:0, due:"", paidDate:""}); save(); render();});
 
 render();
+});
 </script>
 </body>
 </html>
