@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker VS40 Table + Calendar</title>
+<title>Paycheck Tracker VS40 Fixed Calendar</title>
 <style>
 body { font-family: Arial,sans-serif; background:#FDF9F5; margin:0; padding:0;}
 header { text-align:center; font-size:28px; padding:12px; }
@@ -14,7 +14,7 @@ header { text-align:center; font-size:28px; padding:12px; }
 /* Mini calendar */
 #miniCalendar { border-collapse:collapse; margin:auto; }
 #miniCalendar th,#miniCalendar td {
-  width:30px; height:30px; text-align:center; border:1px solid #ccc; font-size:13px; cursor:pointer;
+  width:25px; height:25px; text-align:center; border:1px solid #ccc; font-size:12px; cursor:pointer;
 }
 #miniCalendar td.today { background:#FFD6A5; border-radius:50%; }
 #miniCalendar td.selected { background:#FFB347; border-radius:50%; }
@@ -109,112 +109,134 @@ input:checked + .slider:before { transform:translateX(16px); }
 </div>
 
 <script>
-// --- Data Storage ---
 let incomes = JSON.parse(localStorage.getItem("incomes"))||[];
 let bills = JSON.parse(localStorage.getItem("bills"))||[];
 let currentDate = new Date();
-let selectedDay = null;
+let selectedDay = currentDate.getDate();
 
-// --- Month/Year dropdowns ---
+// Populate month/year dropdowns
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
-for(let m=0;m<12;m++){ let opt=document.createElement("option"); opt.value=m; opt.text=new Date(2000,m,1).toLocaleString('default',{month:'long'}); monthSelect.appendChild(opt);}
-for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){ let opt=document.createElement("option"); opt.value=y; opt.text=y; yearSelect.appendChild(opt);}
+for(let m=0;m<12;m++){
+  let opt=document.createElement("option");
+  opt.value=m;
+  opt.text=new Date(2000,m,1).toLocaleString('default',{month:'long'});
+  monthSelect.appendChild(opt);
+}
+for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){
+  let opt=document.createElement("option");
+  opt.value=y;
+  opt.text=y;
+  yearSelect.appendChild(opt);
+}
 monthSelect.value=currentDate.getMonth();
 yearSelect.value=currentDate.getFullYear();
-monthSelect.onchange=()=>{currentDate.setMonth(parseInt(monthSelect.value)); selectedDay=null; render();}
-yearSelect.onchange=()=>{currentDate.setFullYear(parseInt(yearSelect.value)); selectedDay=null; render();}
+monthSelect.onchange=()=>{currentDate.setMonth(parseInt(monthSelect.value)); render();}
+yearSelect.onchange=()=>{currentDate.setFullYear(parseInt(yearSelect.value)); render();}
 
-// --- Mini Calendar ---
+// --- Render Calendar ---
 function renderMiniCalendar(){
-    const tbody=document.querySelector("#miniCalendar tbody"); tbody.innerHTML="";
-    const month=currentDate.getMonth(), year=currentDate.getFullYear();
-    const firstDay=new Date(year,month,1).getDay();
-    const lastDate=new Date(year,month+1,0).getDate();
-    let row=document.createElement("tr");
-    for(let i=0;i<firstDay;i++){ row.appendChild(document.createElement("td")); }
-    for(let d=1; d<=lastDate; d++){
-        const td=document.createElement("td"); td.textContent=d;
-        if(d===new Date().getDate() && month===new Date().getMonth() && year===new Date().getFullYear()) td.classList.add("today");
-        if(d===selectedDay) td.classList.add("selected");
-        td.onclick=()=>{ selectedDay=d; render(); }
-        row.appendChild(td);
-        if((firstDay+d)%7===0){ tbody.appendChild(row); row=document.createElement("tr"); }
-    }
-    tbody.appendChild(row);
+  const tbody=document.querySelector("#miniCalendar tbody");
+  tbody.innerHTML="";
+  const month=currentDate.getMonth(), year=currentDate.getFullYear();
+  const firstDay=new Date(year,month,1).getDay();
+  const lastDate=new Date(year,month+1,0).getDate();
+  let row=document.createElement("tr");
+
+  for(let i=0;i<firstDay;i++){
+    row.appendChild(document.createElement("td"));
+  }
+
+  for(let d=1; d<=lastDate; d++){
+    const td=document.createElement("td");
+    td.textContent=d;
+    const today=new Date();
+    if(d===today.getDate() && month===today.getMonth() && year===today.getFullYear()) td.classList.add("today");
+    if(d===selectedDay) td.classList.add("selected");
+    td.onclick=()=>{ selectedDay=d; render(); };
+    row.appendChild(td);
+    if((firstDay+d)%7===0){ tbody.appendChild(row); row=document.createElement("tr"); }
+  }
+  if(row.children.length>0) tbody.appendChild(row);
 }
 
 // --- Dashboard ---
 function updateDashboard(){
-    const filterFunc = e=>!selectedDay || new Date(e.date).getDate()===selectedDay;
-    const filteredIncomes = incomes.filter(filterFunc);
-    const filteredBills = bills.filter(filterFunc);
-    const totalIncome = filteredIncomes.reduce((sum,i)=>sum+(+i.actual||0),0);
-    const totalExpected = filteredIncomes.reduce((sum,i)=>sum+(+i.expected||0),0);
-    const totalBills = filteredBills.reduce((sum,b)=>sum+(+b.amount||0),0);
-    const receivedPercent = totalExpected ? Math.min((totalIncome/totalExpected)*100,100) : 0;
-    document.getElementById("dashIncome").innerText = totalIncome.toFixed(2);
-    document.getElementById("dashBills").innerText = totalBills.toFixed(2);
-    document.getElementById("dashLeft").innerText = (totalIncome-totalBills).toFixed(2);
-    document.getElementById("dashProgress").style.width = receivedPercent + "%";
+  const filterFunc = e=>new Date(e.date).getMonth()===currentDate.getMonth() &&
+                        new Date(e.date).getFullYear()===currentDate.getFullYear() &&
+                        (!selectedDay || new Date(e.date).getDate()===selectedDay);
+
+  const filteredIncomes = incomes.filter(filterFunc);
+  const filteredBills = bills.filter(filterFunc);
+  const totalIncome = filteredIncomes.reduce((sum,i)=>sum+(+i.actual||0),0);
+  const totalExpected = filteredIncomes.reduce((sum,i)=>sum+(+i.expected||0),0);
+  const totalBills = filteredBills.reduce((sum,b)=>sum+(+b.amount||0),0);
+  const receivedPercent = totalExpected ? Math.min((totalIncome/totalExpected)*100,100) : 0;
+  document.getElementById("dashIncome").innerText = totalIncome.toFixed(2);
+  document.getElementById("dashBills").innerText = totalBills.toFixed(2);
+  document.getElementById("dashLeft").innerText = (totalIncome-totalBills).toFixed(2);
+  document.getElementById("dashProgress").style.width = receivedPercent + "%";
 }
 
-// --- LocalStorage ---
-function saveData(){ localStorage.setItem("incomes",JSON.stringify(incomes)); localStorage.setItem("bills",JSON.stringify(bills)); }
+// --- Save ---
+function saveData(){
+  localStorage.setItem("incomes",JSON.stringify(incomes));
+  localStorage.setItem("bills",JSON.stringify(bills));
+}
 
 // --- Render Tables ---
 function render(){
-    renderMiniCalendar();
-    updateDashboard();
-    const filterFunc = e=>!selectedDay || new Date(e.date).getDate()===selectedDay;
+  renderMiniCalendar();
+  updateDashboard();
+  const filterFunc = e=>new Date(e.date).getMonth()===currentDate.getMonth() &&
+                        new Date(e.date).getFullYear()===currentDate.getFullYear() &&
+                        (!selectedDay || new Date(e.date).getDate()===selectedDay);
 
-    // Income table
-    const incBody=document.querySelector("#incomeTable tbody"); incBody.innerHTML="";
-    incomes.forEach((i,index)=>{
-        if(filterFunc(i)){
-            const tr=document.createElement("tr");
-            tr.innerHTML=`
-            <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${index}].type=this.value; saveData(); render();"></td>
-            <td><input type="text" value="${i.description||''}" onchange="incomes[${index}].description=this.value; saveData(); render();"></td>
-            <td><input type="date" value="${i.date||new Date().toISOString().split('T')[0]}" onchange="incomes[${index}].date=this.value; saveData(); render();"></td>
-            <td><input type="number" value="${i.actual||0}" onchange="incomes[${index}].actual=parseFloat(this.value)||0; saveData(); render();"></td>
-            <td><input type="number" value="${i.expected||0}" onchange="incomes[${index}].expected=parseFloat(this.value)||0; saveData(); render();"></td>
-            <td><label class="switch"><input type="checkbox" ${i.paidDate?'checked':''} onchange="incomes[${index}].paidDate=this.checked?new Date().toISOString().split('T')[0]:''; saveData(); render();"><span class="slider"></span></label></td>
-            <td><input type="date" value="${i.paidDate||''}" onchange="incomes[${index}].paidDate=this.value; saveData(); render();"></td>
-            <td><button class="removeBtn" onclick="incomes.splice(${index},1); saveData(); render();">🗑️</button></td>`;
-            incBody.appendChild(tr);
-        }
-    });
+  const incBody=document.querySelector("#incomeTable tbody");
+  incBody.innerHTML="";
+  incomes.forEach((i,index)=>{
+    if(filterFunc(i)){
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+      <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${index}].type=this.value; saveData(); render();"></td>
+      <td><input type="text" value="${i.description||''}" onchange="incomes[${index}].description=this.value; saveData(); render();"></td>
+      <td><input type="date" value="${i.date||new Date().toISOString().split('T')[0]}" onchange="incomes[${index}].date=this.value; saveData(); render();"></td>
+      <td><input type="number" value="${i.actual||0}" onchange="incomes[${index}].actual=parseFloat(this.value)||0; saveData(); render();"></td>
+      <td><input type="number" value="${i.expected||0}" onchange="incomes[${index}].expected=parseFloat(this.value)||0; saveData(); render();"></td>
+      <td><label class="switch"><input type="checkbox" ${i.paidDate?'checked':''} onchange="incomes[${index}].paidDate=this.checked?new Date().toISOString().split('T')[0]:''; saveData(); render();"><span class="slider"></span></label></td>
+      <td><input type="date" value="${i.paidDate||''}" onchange="incomes[${index}].paidDate=this.value; saveData(); render();"></td>
+      <td><button class="removeBtn" onclick="incomes.splice(${index},1); saveData(); render();">🗑️</button></td>`;
+      incBody.appendChild(tr);
+    }
+  });
 
-    // Bills table
-    const billBody=document.querySelector("#billTable tbody"); billBody.innerHTML="";
-    bills.forEach((b,index)=>{
-        if(filterFunc(b)){
-            const tr=document.createElement("tr");
-            tr.innerHTML=`
-            <td><input type="text" value="${b.name||''}" onchange="bills[${index}].name=this.value; saveData(); render();"></td>
-            <td><input type="date" value="${b.date||new Date().toISOString().split('T')[0]}" onchange="bills[${index}].date=this.value; saveData(); render();"></td>
-            <td><input type="number" value="${b.amount||0}" onchange="bills[${index}].amount=parseFloat(this.value)||0; saveData(); render();"></td>
-            <td><label class="switch"><input type="checkbox" ${b.paidDate?'checked':''} onchange="bills[${index}].paidDate=this.checked?new Date().toISOString().split('T')[0]:''; saveData(); render();"><span class="slider"></span></label></td>
-            <td><input type="date" value="${b.paidDate||''}" onchange="bills[${index}].paidDate=this.value; saveData(); render();"></td>
-            <td><button class="removeBtn" onclick="bills.splice(${index},1); saveData(); render();">🗑️</button></td>`;
-            billBody.appendChild(tr);
-        }
-    });
+  const billBody=document.querySelector("#billTable tbody");
+  billBody.innerHTML="";
+  bills.forEach((b,index)=>{
+    if(filterFunc(b)){
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+      <td><input type="text" value="${b.name||''}" onchange="bills[${index}].name=this.value; saveData(); render();"></td>
+      <td><input type="date" value="${b.date||new Date().toISOString().split('T')[0]}" onchange="bills[${index}].date=this.value; saveData(); render();"></td>
+      <td><input type="number" value="${b.amount||0}" onchange="bills[${index}].amount=parseFloat(this.value)||0; saveData(); render();"></td>
+      <td><label class="switch"><input type="checkbox" ${b.paidDate?'checked':''} onchange="bills[${index}].paidDate=this.checked?new Date().toISOString().split('T')[0]:''; saveData(); render();"><span class="slider"></span></label></td>
+      <td><input type="date" value="${b.paidDate||''}" onchange="bills[${index}].paidDate=this.value; saveData(); render();"></td>
+      <td><button class="removeBtn" onclick="bills.splice(${index},1); saveData(); render();">🗑️</button></td>`;
+      billBody.appendChild(tr);
+    }
+  });
 }
 
-// --- Add buttons ---
+// --- Add Buttons ---
 document.getElementById("addIncomeBtn").onclick=()=>{
-    const dateStr = selectedDay ? new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay).toISOString().split('T')[0]
-                                : new Date().toISOString().split('T')[0];
-    incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0,paidDate:''});
-    saveData(); render();
+  const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay).toISOString().split('T')[0];
+  incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0,paidDate:''});
+  saveData(); render();
 };
 document.getElementById("addBillBtn").onclick=()=>{
-    const dateStr = selectedDay ? new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay).toISOString().split('T')[0]
-                                : new Date().toISOString().split('T')[0];
-    bills.push({name:'Bill',date:dateStr,amount:0,paidDate:''});
-    saveData(); render();
+  const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay).toISOString().split('T')[0];
+  bills.push({name:'Bill',date:dateStr,amount:0,paidDate:''});
+  saveData(); render();
 };
 
 // Initial render
