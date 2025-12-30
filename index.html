@@ -3,140 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v21</title>
+<title>Paycheck Tracker v22 Complete</title>
 <style>
-:root {
-  --bg:#fff7f2;
-  --text:#333;
-  --accent:#ffd8a8;
-  --income:#ffe066;
-  --bonus:#ff85a2;
-  --freelance:#6ec6ff;
-  --other:#c084fc;
-  --paid:#4ade80;
-  --unpaid:#d1d5db;
-  --card-bg:#fff;
-  --card-shadow:0 3px 8px rgba(0,0,0,0.1);
+:root{
+  --bg:#F2F2F7; --text:#333; --accent:#FFD8A8;
+  --income:#FFE066; --bonus:#FF85A2; --freelance:#6EC6FF; --other:#C084FC;
+  --paid:#4ADE80; --card-bg:#fff; --card-shadow:0 3px 12px rgba(0,0,0,0.1);
 }
-body{
-  margin:0;
-  font-family:-apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-header{
-  display:flex; justify-content:space-between; align-items:center;
-  padding:12px; border-bottom:1px solid rgba(0,0,0,.1);
-}
-button{
-  background:var(--accent);
-  color:#333;
-  border:none;
-  border-radius:12px;
-  padding:8px 12px;
-  font-size:14px;
-  cursor:pointer;
-  transition: transform 0.1s ease;
-}
-button:active{
-  transform: scale(0.95);
-}
-.summary-container{
-  padding:12px;
-}
-.summary{
-  background:var(--card-bg);
-  border-radius:16px;
-  padding:12px;
-  box-shadow:var(--card-shadow);
-  font-size:16px;
-  font-weight:500;
-}
-.card{
-  background:var(--card-bg);
-  border-radius:16px;
-  padding:12px;
-  margin:10px 12px;
-  box-shadow:var(--card-shadow);
-  transition: transform 0.1s ease;
-}
-.card:active{
-  transform: scale(0.98);
-}
-input, select{
-  width:100%;
-  padding:8px;
-  font-size:14px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  box-sizing:border-box;
-  margin-top:4px;
-}
-.mini-caption{
-  font-size:11px;
-  color:#777;
-  margin-top:2px;
-}
-.switch{
-  position:relative;
-  display:inline-block;
-  width:50px;
-  height:28px;
-}
-.switch input{
-  opacity:0;
-  width:0;
-  height:0;
-}
-.slider{
-  position:absolute;
-  cursor:pointer;
-  top:0; left:0; right:0; bottom:0;
-  background-color:var(--unpaid);
-  border-radius:28px;
-  transition: 0.4s;
-}
-.slider:before{
-  position:absolute;
-  content:"";
-  height:22px;
-  width:22px;
-  left:3px;
-  bottom:3px;
-  background-color:white;
-  border-radius:50%;
-  transition: 0.4s;
-}
-input:checked + .slider{
-  background-color:var(--paid);
-}
-input:checked + .slider:before{
-  transform:translateX(22px);
-}
-#totals{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  background:var(--card-bg);
-  padding:10px;
-  box-shadow:0 -2px 5px rgba(0,0,0,0.1);
-  font-weight:600;
-  display:flex;
-  justify-content:space-around;
-  z-index:3;
-}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro";background:var(--bg);color:var(--text);overflow-x:hidden;}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.1);}
+.summary-container{padding:12px;}
+.summary{background:var(--card-bg);border-radius:16px;padding:12px;box-shadow:var(--card-shadow);font-size:16px;font-weight:500;}
+#entries{padding-bottom:140px;}
+.card{background:var(--card-bg);border-radius:16px;padding:12px;margin:10px 12px;box-shadow:var(--card-shadow);transition:transform 0.15s ease,box-shadow 0.15s ease;}
+.card:active{transform:scale(0.98);box-shadow:0 5px 18px rgba(0,0,0,0.15);}
+label{display:block;margin-top:8px;font-size:13px;}
+input[type=text], input[type=number], input[type=date]{width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:14px;margin-top:2px;box-sizing:border-box;}
+.mini-caption{font-size:11px;color:#777;margin-top:2px;}
+.progress-bar-container{height:6px;background:#e5e5e5;border-radius:3px;margin-top:4px;overflow:hidden;}
+.progress-bar{height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s ease;}
+.switch{position:relative;display:inline-block;width:50px;height:28px;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;border-radius:28px;transition:0.4s;}
+.slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.4s;}
+input:checked + .slider{background-color:var(--paid);}
+input:checked + .slider:before{transform:translateX(22px);}
+#totals{position:fixed;bottom:0;left:0;width:100%;background:var(--card-bg);padding:10px;box-shadow:0 -2px 5px rgba(0,0,0,0.1);font-weight:600;display:flex;justify-content:space-around;z-index:3;align-items:center;}
+.fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;color:#333;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.2);transition:transform 0.15s ease;z-index:2;}
+.fab:active{transform:scale(0.95);}
+.fab-menu{position:fixed;bottom:80px;right:20px;display:none;flex-direction:column;gap:10px;z-index:2;}
+.fab-menu button{width:150px;border-radius:12px;text-align:center;font-size:14px;}
+#pickerOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.25);display:none;align-items:flex-end;justify-content:center;z-index:1000;}
+#pickerSheet{background:#fff;width:100%;max-width:400px;border-top-left-radius:16px;border-top-right-radius:16px;padding:12px;box-shadow:0 -3px 12px rgba(0,0,0,0.2);}
+.picker-option{padding:12px;border-radius:12px;margin-bottom:6px;text-align:center;background:#f2f2f7;cursor:pointer;transition:all 0.15s ease;}
+.picker-option:hover{background:#e0e0e0;}
+.draggable{cursor:grab;}
+.draggable:active{cursor:grabbing;}
 </style>
 </head>
 <body>
 
-<header>
-<h2>💰 Paycheck Tracker</h2>
-<div>
-<button id="addIncomeBtn">➕ Add Income</button>
-<button id="addBillBtn">➕ Add Bill</button>
-</div>
-</header>
+<header><h2>💰 Paycheck Tracker</h2></header>
 
 <div class="summary-container">
 <div class="summary" id="summary"></div>
@@ -149,6 +56,14 @@ input:checked + .slider:before{
 <span id="totalBills">Bills: $0.00</span>
 <span id="balanceLeft">Left: $0.00</span>
 </div>
+
+<div class="fab" id="fab">+</div>
+<div class="fab-menu" id="fabMenu">
+<button id="addIncomeBtn">➕ Add Income</button>
+<button id="addBillBtn">➕ Add Bill</button>
+</div>
+
+<div id="pickerOverlay"><div id="pickerSheet"></div></div>
 
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
@@ -173,19 +88,14 @@ const render=()=>{
 const container=document.getElementById("entries");
 container.innerHTML="";
 
-// Render incomes
+// --- Render Incomes ---
 incomes.forEach((i,index)=>{
 const card=document.createElement("div");
-card.className="card";
+card.className="card draggable";
 card.innerHTML=`
 <label>Income Type
-<select>
-<option ${i.type==="Salary"?"selected":""}>Salary</option>
-<option ${i.type==="Bonus"?"selected":""}>Bonus</option>
-<option ${i.type==="Freelance"?"selected":""}>Freelance</option>
-<option ${i.type==="Other"?"selected":""}>Other</option>
-</select>
-<div class="mini-caption">Select income type</div>
+<input type="text" readonly value="${i.type||'Salary'}" class="incomeTypeField">
+<div class="mini-caption">Tap to select type</div>
 </label>
 <label>Custom Description
 <input type="text" value="${i.custom||''}">
@@ -203,36 +113,36 @@ card.innerHTML=`
 <input type="date" value="${i.paidDate||''}">
 <div class="mini-caption">Date received</div>
 </label>
+<div class="progress-bar-container"><div class="progress-bar" style="width:${Math.min((i.actual||0)/(i.expected||1)*100,100)}%"></div></div>
 <button>🗑️ Remove</button>
 `;
 
-const sel=card.querySelector("select");
-sel.onchange=e=>{i.type=sel.value; save(); renderTotals();}
+const typeInput=card.querySelector(".incomeTypeField");
+typeInput.onclick=()=>{openPicker(i,typeInput);}
 
-const customInput=card.querySelectorAll("input")[0];
+const customInput=card.querySelectorAll("input")[1];
 customInput.oninput=e=>{i.custom=customInput.value; save();}
 
-const expectedInput=card.querySelectorAll("input")[1];
+const expectedInput=card.querySelectorAll("input")[2];
 expectedInput.oninput=e=>expectedInput.value=expectedInput.value.replace(/[^0-9.]/g,'');
-expectedInput.onblur=e=>{i.expected=parseFloat(expectedInput.value)||0; save(); renderTotals();}
+expectedInput.onblur=e=>{i.expected=parseFloat(expectedInput.value)||0; save(); renderTotals(); render();}
 
-const actualInput=card.querySelectorAll("input")[2];
+const actualInput=card.querySelectorAll("input")[3];
 actualInput.oninput=e=>actualInput.value=actualInput.value.replace(/[^0-9.]/g,'');
-actualInput.onblur=e=>{i.actual=parseFloat(actualInput.value)||0; save(); renderTotals();}
+actualInput.onblur=e=>{i.actual=parseFloat(actualInput.value)||0; save(); renderTotals(); render();}
 
-const dateInput=card.querySelectorAll("input")[3];
+const dateInput=card.querySelectorAll("input")[4];
 dateInput.oninput=e=>{i.paidDate=dateInput.value; save(); renderTotals();}
 
-const del=card.querySelector("button");
-del.onclick=()=>{incomes.splice(index,1); save(); render();}
+card.querySelector("button").onclick=()=>{incomes.splice(index,1); save(); render();}
 
 container.appendChild(card);
 });
 
-// Render bills
+// --- Render Bills ---
 bills.forEach((b,index)=>{
 const card=document.createElement("div");
-card.className="card";
+card.className="card draggable";
 card.innerHTML=`
 <label>Bill Name
 <input type="text" value="${b.name||''}">
@@ -257,46 +167,78 @@ card.innerHTML=`
 <input type="date" value="${b.paidDate||''}">
 <div class="mini-caption">Date paid</div>
 </label>
+<div class="progress-bar-container"><div class="progress-bar" style="width:${Math.min((b.amount||0)/1000*100,100)}%"></div></div>
 <button>🗑️ Remove</button>
 `;
 
-const nameI=card.querySelectorAll("input")[0];
-const amtI=card.querySelectorAll("input")[1];
-const dueI=card.querySelectorAll("input")[2];
-const paidChk=card.querySelectorAll("input")[3];
-const paidDateI=card.querySelectorAll("input")[4];
-const del=card.querySelector("button");
-
-nameI.oninput=e=>{b.name=nameI.value; save();}
-amtI.oninput=e=>amtI.value=amtI.value.replace(/[^0-9.]/g,'');
-amtI.onblur=e=>{b.amount=parseFloat(amtI.value)||0; save(); renderTotals();}
-dueI.oninput=e=>{b.due=dueI.value; save();}
-paidChk.onchange=e=>{
-if(paidChk.checked){const today=new Date().toISOString().split("T")[0];b.paidDate=today; paidDateI.value=today;}
-else{b.paidDate=""; paidDateI.value="";}
+const inputs=card.querySelectorAll("input");
+inputs[0].oninput=e=>{b.name=inputs[0].value; save();}
+inputs[1].oninput=e=>inputs[1].value=inputs[1].value.replace(/[^0-9.]/g,'');
+inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); renderTotals(); render();}
+inputs[2].oninput=e=>{b.due=inputs[2].value; save();}
+inputs[3].onchange=e=>{
+if(inputs[3].checked){const today=new Date().toISOString().split("T")[0];b.paidDate=today; inputs[4].value=today;}
+else{b.paidDate=""; inputs[4].value="";}
 save(); renderTotals();
 }
-paidDateI.oninput=e=>{b.paidDate=paidDateI.value; save(); renderTotals();}
-del.onclick=()=>{bills.splice(index,1); save(); render();}
+inputs[4].oninput=e=>{b.paidDate=inputs[4].value; save(); renderTotals();}
+card.querySelector("button").onclick=()=>{bills.splice(index,1); save(); render();}
 
 container.appendChild(card);
+});
+
+// --- Drag to reorder ---
+let dragEl=null,dragIndex=-1,dragType="";
+[...document.querySelectorAll(".draggable")].forEach((el,i)=>{
+el.draggable=true;
+el.ondragstart=e=>{dragEl=el; dragIndex=i; dragType=el.parentNode===document.getElementById("entries")?"income":"bill";}
+el.ondragover=e=>e.preventDefault();
+el.ondrop=e=>{
+if(!dragEl||dragEl===el) return;
+const children=[...container.children];
+const targetIndex=children.indexOf(el);
+if(dragType==="income"){
+const moved=incomes.splice(dragIndex,1)[0]; incomes.splice(targetIndex,0,moved);
+}else{
+const moved=bills.splice(dragIndex,1)[0]; bills.splice(targetIndex,0,moved);
+}
+save(); render();
+};
 });
 
 renderTotals();
 }
 
+// --- FAB menu ---
+const fab=document.getElementById("fab");
+const fabMenu=document.getElementById("fabMenu");
+fab.onclick=()=>{fabMenu.style.display=fabMenu.style.display==="flex"?"none":"flex";}
+
+// --- Picker ---
+const pickerOverlay=document.getElementById("pickerOverlay");
+const pickerSheet=document.getElementById("pickerSheet");
+const incomeTypes=["Salary","Bonus","Freelance","Other"];
+function openPicker(item,input){
+pickerSheet.innerHTML="";
+incomeTypes.forEach(type=>{
+const option=document.createElement("div");
+option.className="picker-option";
+option.innerText=type;
+option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}
+pickerSheet.appendChild(option);
+});
+pickerOverlay.style.display="flex";
+}
+pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
+
+// --- Add Income/Bill ---
 document.getElementById("addIncomeBtn").onclick=()=>{
-incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:""});
-save(); render();
-}
+incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:""}); save(); render(); fabMenu.style.display="none";}
 document.getElementById("addBillBtn").onclick=()=>{
-bills.push({name:"",amount:0,due:"",paidDate:""});
-save(); render();
-}
+bills.push({name:"",amount:0,due:"",paidDate:""}); save(); render(); fabMenu.style.display="none";}
 
 render();
 });
 </script>
-
 </body>
 </html>
