@@ -1,231 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Full Update</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Paycheck Tracker v42.1</title>
 <style>
-body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
-header{text-align:center;font-size:28px;padding:12px;}
-#calendarWrapper{width:200px;margin:0 auto;}
-.monthNav{display:flex;justify-content:center;align-items:center;gap:6px;margin:0 auto 6px auto;}
-.monthNav button, .monthNav select{vertical-align:middle;font-size:14px;padding:4px 8px;border-radius:8px;border:none;cursor:pointer;}
-#todayBtn{font-size:12px;padding:2px 6px;border-radius:6px;background:#FFD6A5;border:none;cursor:pointer;}
-#miniCalendarContainer{width:200px;margin:0 auto;display:flex;justify-content:center;}
-#miniCalendar{width:200px;border-collapse:collapse;}
-#miniCalendar th,#miniCalendar td{width:18px;height:18px;font-size:9px;text-align:center;border:1px solid #ccc;cursor:pointer;}
-#miniCalendar td.today{border:2px solid #FF7F50;font-weight:bold;}
-#miniCalendar td.selected{border:2px solid #FFB347;font-weight:bold;}
-.dashboard{display:flex;justify-content:space-around;align-items:flex-start;background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:14px;}
-.dashboard div{max-width:30%;}
-.dashboard ul{margin:2px 0;padding-left:15px;}
-.section{margin:10px;}
-table{width:100%;border-collapse:collapse;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;}
-table tbody{display:block;max-height:200px;overflow-y:auto;}
-table thead,table tbody tr{display:table;width:100%;table-layout:fixed;}
-th,td{border:1px solid #ccc;padding:3px 5px;font-size:12px;text-align:center;height:30px;}
-table input[type="text"],table input[type="number"],table input[type="date"]{width:95%;box-sizing:border-box;padding:2px 3px;font-size:11px;text-align:center;border-radius:4px;border:1px solid #ccc;}
-.addEntryBtn{font-size:13px;padding:6px 10px;border-radius:10px;background:#FFD6A5;border:none;cursor:pointer;margin:4px 0;}
-button.removeBtn{background:#FFB3B3;color:#fff;border:none;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;}
-button.removeBtn:hover{background:#FF7B7B;}
-.switch{position:relative;display:inline-block;width:32px;height:16px;}
-.switch input{opacity:0;width:0;height:0;}
-.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d1d5db;border-radius:24px;transition:.4s;}
-.slider:before{position:absolute;content:"";height:12px;width:12px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.4s;}
-input:checked+.slider{background:#4CAF50;border:1px solid #3A8E40;}
-input:checked+.slider:before{transform:translateX(16px);}
-#incomeTable tbody tr:hover,#billTable tbody tr:hover{background: #FFF1B5; transition: background 0.3s;}
+body{font-family:-apple-system,Arial;background:#FFF8F0;margin:0}
+header{text-align:center;font-size:26px;padding:12px}
+.monthNav, .dashboard{display:flex;justify-content:center;gap:6px}
+.monthNav button,select,.btn{background:#FFD6A5;border:none;border-radius:8px;padding:6px}
+#calendarWrap{width:230px;margin:auto}
+#miniCalendar{width:100%;border-collapse:collapse}
+#miniCalendar td,#miniCalendar th{border:1px solid #ccc;text-align:center;height:30px;font-size:11px;border-radius:4px;cursor:pointer}
+.today{border:2px solid #FFB347;box-shadow:0 0 5px #FFD580}
+.selected{border:2px solid #FFB347}
+#calendarInfo{background:#FFF3E0;padding:6px;margin-top:4px;border-radius:6px;font-size:12px}
+.section{margin:12px}
+table{width:100%;border-collapse:collapse;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+th,td{border:1px solid #ccc;font-size:12px;text-align:center;padding:4px}
+tbody{display:block;max-height:180px;overflow:auto}
+thead,tr{display:table;width:100%;table-layout:fixed}
+input,select{width:95%;font-size:11px}
+.remove{background:#FFB3B3;border:none;border-radius:6px}
+.blue{background:#1E88E5}.red{background:#E53935}.purple{background:#A569BD}
 </style>
 </head>
-<body>
 
+<body>
 <header>💰 Paycheck Tracker</header>
 
-<div id="calendarWrapper">
+<div id="calendarWrap">
   <div class="monthNav">
-    <button id="prevMonth">◀</button>
-    <select id="monthSelect"></select>
-    <select id="yearSelect"></select>
-    <button id="nextMonth">▶</button>
-    <button id="todayBtn">Today</button>
+    <button id="prev">◀</button>
+    <select id="month"></select>
+    <select id="year"></select>
+    <button id="next">▶</button>
+    <button id="today">Today</button>
   </div>
-  <div id="miniCalendarContainer">
-    <table id="miniCalendar">
-      <thead>
-        <tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <table id="miniCalendar">
+    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="calendarInfo">Select a day</div>
 </div>
 
 <div class="dashboard">
-  <div>
-    Total Income: $<span id="dashIncome">0</span>
-    <ul id="incomeList" style="color:#1E88E5;"></ul>
-  </div>
-  <div>
-    Total Bills: $<span id="dashBills">0</span>
-    <ul id="billsList" style="color:#E53935;"></ul>
-  </div>
-  <div>
-    Left: $<span id="dashLeft">0</span>
-    <div id="leftCalc" style="color:#333;"></div>
-  </div>
+  <div>Income: $<span id="dIncome">0</span></div>
+  <div>Bills: $<span id="dBills">0</span></div>
+  <div>Left: $<span id="dLeft">0</span></div>
 </div>
 
 <div class="section">
 <h3>Income</h3>
-<button id="addIncomeBtn" class="addEntryBtn">➕ Add Income</button>
-<table id="incomeTable">
-<thead><tr>
-<th>Type</th><th>Description</th><th>Date Received</th><th>Expected</th><th>Actual</th><th>Remove</th>
-</tr></thead><tbody></tbody>
+<button class="btn" onclick="addIncome()">➕ Add Income</button>
+<button class="btn" onclick="sortIncome()">Sort</button>
+<table>
+<thead><tr><th>Type</th><th>Date</th><th>Expected</th><th>Actual</th><th></th></tr></thead>
+<tbody id="incomeBody"></tbody>
 </table>
 </div>
 
 <div class="section">
 <h3>Bills</h3>
-<button id="addBillBtn" class="addEntryBtn">➕ Add Bill</button>
-<table id="billTable">
-<thead><tr>
-<th>Bill Name</th><th>Date Due</th><th>Amount</th><th>Paid?</th><th>Date Paid</th><th>Remove</th>
-</tr></thead><tbody></tbody>
+<button class="btn" onclick="addBill()">➕ Add Bill</button>
+<button class="btn" onclick="sortBills()">Sort</button>
+<table>
+<thead><tr><th>Name</th><th>Due</th><th>Amount</th><th>Paid</th><th></th></tr></thead>
+<tbody id="billBody"></tbody>
 </table>
 </div>
 
 <script>
-// Utilities
-function localISODate(y,m,d){const mm=String(m+1).padStart(2,'0');const dd=String(d).padStart(2,'0');return `${y}-${mm}-${dd}`;}
-function parseLocalDate(str){if(!str) return null;const [y,m,d]=str.split('-').map(Number);return new Date(y,m-1,d);}
+const $=id=>document.getElementById(id);
+const iso=(y,m,d)=>`${y}-${String(m+1).padStart(2,0)}-${String(d).padStart(2,0)}`;
+const parse=d=>d?new Date(d):null;
 
-// Data
-let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
-let bills=JSON.parse(localStorage.getItem("bills"))||[];
-let currentDate=new Date();
-let selectedDay=currentDate.getDate();
-function saveData(){localStorage.setItem("incomes",JSON.stringify(incomes));localStorage.setItem("bills",JSON.stringify(bills));}
+let incomes=JSON.parse(localStorage.incomes||"[]");
+let bills=JSON.parse(localStorage.bills||"[]");
+let cur=new Date(), sel=cur.getDate();
 
-// Calendar setup
-const monthSelect=document.getElementById("monthSelect");
-const yearSelect=document.getElementById("yearSelect");
-const prevMonth=document.getElementById("prevMonth");
-const nextMonth=document.getElementById("nextMonth");
-const todayBtn=document.getElementById("todayBtn");
+function save(){localStorage.incomes=JSON.stringify(incomes);localStorage.bills=JSON.stringify(bills)}
 
-for(let m=0;m<12;m++){const o=document.createElement("option");o.value=m;o.text=new Date(2000,m,1).toLocaleString('default',{month:'short'});monthSelect.appendChild(o);}
-for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){const o=document.createElement("option");o.value=y;o.text=y;yearSelect.appendChild(o);}
-monthSelect.value=currentDate.getMonth();
-yearSelect.value=currentDate.getFullYear();
+for(let i=0;i<12;i++)month.add(new Option(new Date(0,i).toLocaleString('default',{month:'short'}),i));
+for(let y=cur.getFullYear()-3;y<=cur.getFullYear()+3;y++)year.add(new Option(y,y));
+month.value=cur.getMonth(); year.value=cur.getFullYear();
 
-monthSelect.onchange=()=>{currentDate.setMonth(+monthSelect.value);render();}
-yearSelect.onchange=()=>{currentDate.setFullYear(+yearSelect.value);render();}
-prevMonth.onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1);selectedDay=null;monthSelect.value=currentDate.getMonth();yearSelect.value=currentDate.getFullYear();render();}
-nextMonth.onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1);selectedDay=null;monthSelect.value=currentDate.getMonth();yearSelect.value=currentDate.getFullYear();render();}
-todayBtn.onclick=()=>{currentDate=new Date();selectedDay=currentDate.getDate();monthSelect.value=currentDate.getMonth();yearSelect.value=currentDate.getFullYear();render();};
+prev.onclick=()=>{cur.setMonth(cur.getMonth()-1);render()};
+next.onclick=()=>{cur.setMonth(cur.getMonth()+1);render()};
+today.onclick=()=>{cur=new Date();sel=cur.getDate();render()};
+month.onchange=()=>{cur.setMonth(month.value);render()};
+year.onchange=()=>{cur.setFullYear(year.value);render()};
 
-// Render mini-calendar
-function renderMiniCalendar(){
-  const body=document.querySelector("#miniCalendar tbody");
-  body.innerHTML="";
-  const m=currentDate.getMonth(),y=currentDate.getFullYear();
-  const firstDay=new Date(y,m,1).getDay();
-  const lastDate=new Date(y,m+1,0).getDate();
-  let row=document.createElement("tr");
-  for(let i=0;i<firstDay;i++) row.appendChild(document.createElement("td"));
-  for(let d=1;d<=lastDate;d++){
-    const td=document.createElement("td");
-    td.textContent=d;
-    const today=new Date();
-    if(d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear()) td.classList.add("today");
-    if(d===selectedDay) td.classList.add("selected");
-    const dateStr=localISODate(y,m,d);
-    const hasIncome=incomes.some(i=>i.date===dateStr);
-    const hasBill=bills.some(b=>b.date===dateStr);
-    if(hasIncome && hasBill) td.style.background="#A569BD";
-    else if(hasIncome) td.style.background="#1E88E5";
-    else if(hasBill) td.style.background="#E53935";
-    td.onclick=()=>{selectedDay=d;render();};
-    row.appendChild(td);
-    if((firstDay+d)%7===0){body.appendChild(row);row=document.createElement("tr");}
+function renderCalendar(){
+  const b=$("miniCalendar").tBodies[0]; b.innerHTML="";
+  const y=cur.getFullYear(),m=cur.getMonth();
+  const first=new Date(y,m,1).getDay(), last=new Date(y,m+1,0).getDate();
+  let r=b.insertRow(); for(let i=0;i<first;i++)r.insertCell();
+  for(let d=1;d<=last;d++){
+    if(r.cells.length===7)r=b.insertRow();
+    const c=r.insertCell(); c.textContent=d;
+    const ds=iso(y,m,d);
+    const i=incomes.some(x=>x.date===ds);
+    const bl=bills.some(x=>x.date===ds);
+    if(i&&bl)c.className="purple"; else if(i)c.className="blue"; else if(bl)c.className="red";
+    if(d===sel)c.classList.add("selected");
+    if(d===new Date().getDate()&&m===new Date().getMonth()&&y===new Date().getFullYear())c.classList.add("today");
+    c.onclick=()=>{sel=d;render()};
   }
-  if(row.children.length>0)body.appendChild(row);
 }
 
-// Dashboard
-function updateDashboard(){
-  const m=currentDate.getMonth();
-  const y=currentDate.getFullYear();
-  let leftover=0, totalIncomeThisMonth=0, billsThisMonth=0;
-  const allIncomes=incomes.map(i=>({...i,dateObj:parseLocalDate(i.date)})).sort((a,b)=>a.dateObj-b.dateObj);
-  const allBills=bills.map(b=>({...b,dateObj:parseLocalDate(b.date)})).sort((a,b)=>a.dateObj-b.dateObj);
-  let incomeItems=[], billItems=[];
-  allIncomes.forEach(i=>{
-    if(i.dateObj<new Date(y,m+1,1)) leftover+=parseFloat(i.actual)||0;
-    if(i.dateObj.getFullYear()===y && i.dateObj.getMonth()===m) totalIncomeThisMonth+=parseFloat(i.actual)||0;
-    if(i.dateObj<=new Date(y,m+1,0)) incomeItems.push(`${i.type||'Income'}: $${(parseFloat(i.actual)||0).toFixed(2)}`);
-  });
-  allBills.forEach(b=>{
-    if(b.dateObj<new Date(y,m+1,1)) leftover-=parseFloat(b.amount)||0;
-    if(b.dateObj.getFullYear()===y && b.dateObj.getMonth()===m) billsThisMonth+=parseFloat(b.amount)||0;
-    if(b.dateObj<=new Date(y,m+1,0)) billItems.push(`${b.name||'Bill'}: $${(parseFloat(b.amount)||0).toFixed(2)}`);
-  });
-  const dashIncome=leftover, dashLeft=leftover-billsThisMonth;
-  document.getElementById("dashIncome").textContent=dashIncome.toFixed(2);
-  document.getElementById("dashBills").textContent=billsThisMonth.toFixed(2);
-  document.getElementById("dashLeft").textContent=dashLeft.toFixed(2);
-  const incomeList=document.getElementById("incomeList"); incomeList.innerHTML=""; incomeItems.forEach(item=>{const li=document.createElement("li");li.textContent=item;incomeList.appendChild(li);});
-  const billsList=document.getElementById("billsList"); billsList.innerHTML=""; billItems.forEach(item=>{const li=document.createElement("li");li.textContent=item;billsList.appendChild(li);});
-  document.getElementById("leftCalc").textContent=`(${dashIncome.toFixed(2)} - ${billsThisMonth.toFixed(2)})`;
+function calendarInfo(){
+  const ds=iso(cur.getFullYear(),cur.getMonth(),sel);
+  const inc=incomes.filter(i=>i.date===ds);
+  const bl=bills.filter(b=>b.date===ds);
+  calendarInfo.textContent=inc.length||bl.length
+    ? [...inc.map(i=>`Income $${i.actual}`),...bl.map(b=>`Bill $${b.amount}`)].join(" | ")
+    : "No entries";
 }
 
-// Render tables
-function render(){
-  renderMiniCalendar(); updateDashboard();
-  const it=document.querySelector("#incomeTable tbody"); it.innerHTML="";
-  incomes.forEach((i,x)=>{
-    const d=parseLocalDate(i.date);
-    if(d && d.getFullYear()===currentDate.getFullYear() && d.getMonth()===currentDate.getMonth()){
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-      <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${x}].type=this.value;saveData();"></td>
-      <td><input type="text" value="${i.description||''}" onchange="incomes[${x}].description=this.value;saveData();"></td>
-      <td><input type="date" value="${i.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="incomes[${x}].date=this.value;saveData();"></td>
-      <td><input type="number" placeholder="$0.00" value="${i.expected||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].expected=parseFloat(this.value)||0;saveData();"></td>
-      <td><input type="number" placeholder="$0.00" value="${i.actual||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].actual=parseFloat(this.value)||0;saveData();"></td>
-      <td><button class='removeBtn' onclick='incomes.splice(${x},1);saveData();render();'>🗑️</button></td>`;
-      it.appendChild(tr);
-    }
+function renderTables(){
+  incomeBody.innerHTML="";
+  incomes.filter(i=>parse(i.date)?.getMonth()===cur.getMonth()).forEach((i,x)=>{
+    incomeBody.innerHTML+=`
+    <tr>
+      <td><select onchange="incomes[${x}].type=this.value;save()"><option ${i.type==="Salary"?"selected":""}>Salary</option><option ${i.type==="Other"?"selected":""}>Other</option></select></td>
+      <td><input type="date" value="${i.date}" onchange="incomes[${x}].date=this.value;save();render()"></td>
+      <td><input value="${i.expected}" onchange="incomes[${x}].expected=this.value;save();render()"></td>
+      <td><input value="${i.actual}" onchange="incomes[${x}].actual=this.value;save();render()"></td>
+      <td><button class="remove" onclick="incomes.splice(${x},1);save();render()">🗑</button></td>
+    </tr>`;
   });
-  const bt=document.querySelector("#billTable tbody"); bt.innerHTML="";
-  bills.forEach((b,x)=>{
-    const d=parseLocalDate(b.date);
-    if(d && d.getFullYear()===currentDate.getFullYear() && d.getMonth()===currentDate.getMonth()){
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-      <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();"></td>
-      <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();"></td>
-      <td><input type="number" placeholder="$0.00" value="${b.amount||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="bills[${x}].amount=parseFloat(this.value)||0;saveData();"></td>
-      <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),parseLocalDate(b.date).getDate()):'';saveData();render();"><span class='slider'></span></label></td>
-      <td><input type="date" value="${b.paidDate||''}" onchange="bills[${x}].paidDate=this.value;saveData();"></td>
-      <td><button class='removeBtn' onclick='bills.splice(${x},1);saveData();render();'>🗑️</button></td>`;
-      bt.appendChild(tr);
-    }
+  billBody.innerHTML="";
+  bills.filter(b=>parse(b.date)?.getMonth()===cur.getMonth()).forEach((b,x)=>{
+    billBody.innerHTML+=`
+    <tr>
+      <td><input value="${b.name}" onchange="bills[${x}].name=this.value;save()"></td>
+      <td><input type="date" value="${b.date}" onchange="bills[${x}].date=this.value;save();render()"></td>
+      <td><input value="${b.amount}" onchange="bills[${x}].amount=this.value;save();render()"></td>
+      <td><input type="checkbox" ${b.paid?"checked":""} onchange="bills[${x}].paid=this.checked;save()"></td>
+      <td><button class="remove" onclick="bills.splice(${x},1);save();render()">🗑</button></td>
+    </tr>`;
   });
 }
 
-// Add buttons
-document.getElementById("addIncomeBtn").onclick=()=>{
-  const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay||1);
-  incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0});
-  saveData();render();
-};
-document.getElementById("addBillBtn").onclick=()=>{
-  const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay||1);
-  bills.push({name:'Bill',date:dateStr,amount:0,paidDate:''});
-  saveData();render();
-};
+function dashboard(){
+  const m=cur.getMonth(),y=cur.getFullYear();
+  let income=0,bill=0,carry=0;
+  incomes.forEach(i=>{const d=parse(i.date); if(d<new Date(y,m,1))carry+=+i.actual; if(d.getMonth()===m&&d.getFullYear()===y)income+=+i.actual});
+  bills.forEach(b=>{const d=parse(b.date); if(d<new Date(y,m,1))carry-=+b.amount; if(d.getMonth()===m&&d.getFullYear()===y)bill+=+b.amount});
+  dIncome.textContent=(carry+income).toFixed(2);
+  dBills.textContent=bill.toFixed(2);
+  dLeft.textContent=(carry+income-bill).toFixed(2);
+}
 
+function addIncome(){incomes.push({type:"Salary",date:iso(cur.getFullYear(),cur.getMonth(),sel),expected:"0.00",actual:"0.00"});save();render()}
+function addBill(){bills.push({name:"",date:iso(cur.getFullYear(),cur.getMonth(),sel),amount:"0.00"});save();render()}
+function sortIncome(){incomes.sort((a,b)=>new Date(a.date)-new Date(b.date));save();render()}
+function sortBills(){bills.sort((a,b)=>new Date(a.date)-new Date(b.date));save();render()}
+
+function render(){renderCalendar();calendarInfo();renderTables();dashboard()}
 render();
 </script>
 </body>
