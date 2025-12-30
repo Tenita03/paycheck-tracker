@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v26</title>
+<title>Paycheck Tracker v26 Fixed</title>
 <style>
 :root{
   --bg:#F2F2F7; --text:#333; --accent:#FFD8A8;
@@ -12,8 +12,8 @@
 }
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text);}
 #appContainer {
-  max-width: 420px;      
-  height: 90vh;          
+  max-width: 420px;
+  height: 90vh;
   overflow-y: auto;
   margin: 0 auto;
   padding: 8px;
@@ -185,11 +185,12 @@ const incomeTypes=["Salary","Bonus","Freelance","Other"];
 function openPicker(item,input){pickerSheet.innerHTML=""; incomeTypes.forEach(type=>{const option=document.createElement("div"); option.className="picker-option"; option.innerText=type; option.onclick=()=>{item.type=type; input.value=type; save(); pickerOverlay.style.display="none"; render();}; pickerSheet.appendChild(option);}); pickerOverlay.style.display="flex";}
 pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
-// Bind Add buttons
+// Fully fixed Add buttons
 document.getElementById("addIncomeBtn").onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();}
 document.getElementById("addBillBtn").onclick=()=>{bills.push({name:"", amount:0, due:"", paidDate:""}); save(); render();}
 
 render();
+});
 </script>
 </body>
 </html>
