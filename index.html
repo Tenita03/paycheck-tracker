@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v41+ Calendar</title>
+<title>Paycheck Tracker v41+ Dropdown</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
@@ -14,10 +14,7 @@ body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background
 header{padding:12px; font-size:28px; font-weight:700; text-align:center;}
 .dashboard{display:flex; justify-content:space-around; font-weight:700; padding:10px 0; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.1); margin:0 10px 10px;}
 .monthNav{display:flex; justify-content:center; align-items:center; gap:10px; margin:0 10px 10px;}
-.monthLabel{font-size:24px; font-weight:700;}
-.monthGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 10px 10px;}
-.monthBox{padding:8px 0; text-align:center; background:#fff; border-radius:12px; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:0.15s;}
-.monthBox:hover{background:var(--accent);}
+.monthNav select{padding:6px; font-size:16px; border-radius:8px; border:1px solid #ccc;}
 .section{margin:10px;}
 .section h3{margin:4px 0;}
 .entry{background:#fff; border-radius:10px; padding:6px; margin:4px 0; box-shadow:0 2px 4px rgba(0,0,0,0.08); cursor:pointer;}
@@ -37,6 +34,7 @@ input:checked + .slider:before{transform:translateX(16px);}
 <body>
 
 <header>💰 Paycheck Tracker</header>
+
 <div class="dashboard">
   <span id="dashIncome">Income: $0.00</span>
   <span id="dashBills">Bills: $0.00</span>
@@ -45,12 +43,9 @@ input:checked + .slider:before{transform:translateX(16px);}
 </div>
 
 <div class="monthNav">
-  <button id="prevMonth">&lt;</button>
-  <div class="monthLabel" id="monthLabel"></div>
-  <button id="nextMonth">&gt;</button>
+  <select id="monthSelect"></select>
+  <select id="yearSelect"></select>
 </div>
-
-<div class="monthGrid" id="monthGrid"></div>
 
 <div class="section">
 <h3>Income</h3>
@@ -74,7 +69,6 @@ let currentDate=new Date();
 const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes)); localStorage.setItem("bills",JSON.stringify(bills));}
 const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
 
-function formatMonthYear(date){return date.toLocaleString('default',{month:'long',year:'numeric'});}
 function getMonthString(date){return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;}
 
 function updateDashboard(){
@@ -147,7 +141,10 @@ function createBillEntry(b){
 
 function renderEntries(){
   const monthStr=getMonthString(currentDate);
-  document.getElementById("monthLabel").innerText=formatMonthYear(currentDate);
+  const monthSelect=document.getElementById("monthSelect");
+  const yearSelect=document.getElementById("yearSelect");
+  monthSelect.value=currentDate.getMonth();
+  yearSelect.value=currentDate.getFullYear();
   const incomeContainer=document.getElementById("incomeContainer");
   const billContainer=document.getElementById("billContainer");
   incomeContainer.innerHTML=""; billContainer.innerHTML="";
@@ -156,39 +153,40 @@ function renderEntries(){
   updateDashboard();
 }
 
-// Month navigation buttons
-document.getElementById("prevMonth").addEventListener("click",()=>{currentDate.setMonth(currentDate.getMonth()-1); renderEntries();});
-document.getElementById("nextMonth").addEventListener("click",()=>{currentDate.setMonth(currentDate.getMonth()+1); renderEntries();});
-
-// Month grid (year overview)
-function renderMonthGrid(){
-  const monthGrid=document.getElementById("monthGrid");
-  monthGrid.innerHTML="";
-  for(let m=0;m<12;m++){
-    const box=document.createElement("div"); box.className="monthBox"; box.textContent=new Date(currentDate.getFullYear(),m,1).toLocaleString('default',{month:'short'});
-    box.addEventListener("click",()=>{currentDate.setMonth(m); renderEntries();});
-    monthGrid.appendChild(box);
-  }
+// Month dropdown
+const monthSelect=document.getElementById("monthSelect");
+for(let m=0;m<12;m++){
+  const opt=document.createElement("option");
+  opt.value=m; opt.text=new Date(2000,m,1).toLocaleString('default',{month:'long'});
+  monthSelect.appendChild(opt);
 }
+monthSelect.addEventListener("change",()=>{currentDate.setMonth(parseInt(monthSelect.value)); renderEntries();});
 
-renderMonthGrid();
+// Year dropdown
+const yearSelect=document.getElementById("yearSelect");
+const currentYear=new Date().getFullYear();
+for(let y=currentYear-5;y<=currentYear+5;y++){
+  const opt=document.createElement("option"); opt.value=y; opt.text=y;
+  yearSelect.appendChild(opt);
+}
+yearSelect.addEventListener("change",()=>{currentDate.setFullYear(parseInt(yearSelect.value)); renderEntries();});
 
-// Add buttons
-document.getElementById("addIncomeBtn").addEventListener("click", () => {
-  const monthStr = getMonthString(currentDate);
-  const newDate = `${monthStr}-01`;
-  incomes.push({ type: "Salary", custom: "", expected: 0, actual: 0, paidDate: "", date: newDate });
+// Add buttons fixed to use selected month/year
+document.getElementById("addIncomeBtn").addEventListener("click",()=>{
+  const month=currentDate.getMonth()+1;
+  const newDate=`${currentDate.getFullYear()}-${month.toString().padStart(2,"0")}-01`;
+  incomes.push({type:"Salary",custom:"",expected:0,actual:0,paidDate:"",date:newDate});
   save(); renderEntries();
 });
-document.getElementById("addBillBtn").addEventListener("click", () => {
-  const monthStr = getMonthString(currentDate);
-  const newDate = `${monthStr}-01`;
-  bills.push({ name: "", amount: 0, due: newDate, paidDate: "" });
+
+document.getElementById("addBillBtn").addEventListener("click",()=>{
+  const month=currentDate.getMonth()+1;
+  const newDate=`${currentDate.getFullYear()}-${month.toString().padStart(2,"0")}-01`;
+  bills.push({name:"",amount:0,due:newDate,paidDate:""});
   save(); renderEntries();
 });
 
 renderEntries();
-});
 </script>
 </body>
 </html>
