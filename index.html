@@ -3,101 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v40</title>
+<title>Paycheck Tracker Calendar v42</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
   --salary:#A0E7E5; --other:#FFAEBC; --paid:#FFF4C1; --border:#E0E0E0;
   --progress-bg:#E0E0E0; --progress-fill:#FFD6A5;
 }
-body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column;}
-#appContainer { flex:1; display:flex; flex-direction:column; padding:10px; box-sizing:border-box; }
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh;}
 header{padding:12px; font-size:26px; font-weight:700; text-align:center;}
-.dashboard{display:flex; justify-content:space-around; font-weight:700; padding:10px 0; margin-bottom:10px; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.1);}
-.section-header{font-weight:700; font-size:18px; margin:10px 0; display:flex; justify-content:space-between; align-items:center;}
-.add-btn{padding:8px 14px; border-radius:14px; font-size:16px; background:var(--accent); color:#333; border:none; cursor:pointer;}
-.tables-container{flex:1; display:flex; flex-direction:column; gap:12px;}
-.scrollable-container{flex:1; overflow-y:auto; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.08);}
-table{width:100%; border-collapse:collapse; font-size:15px;}
-th, td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--border);}
-th{background:#EDEDED; font-weight:700; position:sticky; top:0; z-index:2;}
-tr:nth-child(even){background:#F9F9F9;}
-input[type=text], input[type=number], input[type=date]{width:100%; box-sizing:border-box; padding:6px 8px; border-radius:8px; border:1px solid #ccc; font-size:15px;}
-.switch{position:relative; display:inline-block; width:42px; height:24px;}
+.dashboard{display:flex; justify-content:space-around; font-weight:700; padding:10px 0; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.1); margin:0 10px 10px;}
+.controls{display:flex; justify-content:space-between; align-items:center; margin:0 10px 6px;}
+.controls button{padding:6px 12px; border-radius:10px; background:var(--accent); border:none; font-weight:700; cursor:pointer;}
+#calendarContainer{flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:minmax(80px,auto); gap:4px; padding:0 10px 10px;}
+.dayCell{background:#fff; border-radius:12px; padding:4px; box-shadow:0 2px 4px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; max-height:120px;}
+.dayHeader{font-weight:700; font-size:14px; margin-bottom:2px;}
+.entry{border-radius:8px; padding:2px 4px; margin-bottom:2px; font-size:12px; background:#F2F2F7; display:flex; flex-direction:column;}
+.entry input[type=text], .entry input[type=number], .entry input[type=date]{width:100%; font-size:12px; padding:2px 4px; margin:1px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
+.switch{position:relative; display:inline-block; width:36px; height:20px; margin-top:2px;}
 .switch input{opacity:0; width:0; height:0;}
 .slider{position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:24px; transition:0.4s;}
-.slider:before{position:absolute; content:""; height:20px; width:20px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;}
+.slider:before{position:absolute; content:""; height:16px; width:16px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;}
 input:checked + .slider{background-color:#B9FBC1;}
-input:checked + .slider:before{transform:translateX(18px);}
+input:checked + .slider:before{transform:translateX(16px);}
 .paidRow{background:var(--paid);}
+.progress-container{width:100%; background:var(--progress-bg); border-radius:6px; height:8px; margin-top:2px;}
+.progress-fill{height:100%; background:var(--progress-fill); border-radius:6px;}
+.addEntryBtn{padding:2px 6px; font-size:12px; margin-top:2px; border-radius:8px; background:var(--accent); border:none; cursor:pointer;}
 .picker-overlay{position:fixed; inset:0; background:rgba(0,0,0,0.25); display:none; align-items:center; justify-content:center; z-index:1000;}
-.picker-sheet{background:#fff; border-radius:12px; padding:12px; min-width:180px; box-shadow:0 3px 12px rgba(0,0,0,0.2);}
+.picker-sheet{background:#fff; border-radius:12px; padding:12px; min-width:150px; box-shadow:0 3px 12px rgba(0,0,0,0.2);}
 .picker-option{padding:8px; text-align:center; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:0.15s; background:#F2F2F7;}
 .picker-option:hover{background:#E0E0E0;}
-.progress-container{width:100%; background:var(--progress-bg); border-radius:6px; height:14px; margin-top:4px;}
-.progress-fill{height:100%; background:var(--progress-fill); border-radius:6px;}
 </style>
 </head>
 <body>
 
-<div id="appContainer">
 <header>💰 Paycheck Tracker</header>
-
 <div class="dashboard">
   <span id="dashIncome">Income: $0.00</span>
   <span id="dashBills">Bills: $0.00</span>
   <span id="dashLeft">Left: $0.00</span>
   <span id="dashPercent">Received: 0%</span>
 </div>
-
-<div class="tables-container">
-<div id="incomeSection">
-  <div class="section-header">
-    <span>Income</span>
-    <button class="add-btn" id="addIncomeBtn">➕ Add Income</button>
-  </div>
-  <div class="scrollable-container">
-    <table id="incomeTable">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Expected</th>
-          <th>Actual</th>
-          <th>Progress</th>
-          <th>Paid</th>
-          <th>Date Paid</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="controls">
+  <button id="prevMonth">&lt; Prev</button>
+  <span id="monthLabel"></span>
+  <button id="nextMonth">Next &gt;</button>
 </div>
-
-<div id="billSection">
-  <div class="section-header">
-    <span>Bills</span>
-    <button class="add-btn" id="addBillBtn">➕ Add Bill</button>
-  </div>
-  <div class="scrollable-container">
-    <table id="billTable">
-      <thead>
-        <tr>
-          <th>Bill Name</th>
-          <th>Amount</th>
-          <th>Date Due</th>
-          <th>Paid</th>
-          <th>Date Paid</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-</div>
-</div>
+<div id="calendarContainer"></div>
 
 <div class="picker-overlay" id="pickerOverlay"><div class="picker-sheet" id="pickerSheet"></div></div>
 
@@ -110,10 +63,14 @@ let bills=JSON.parse(localStorage.getItem("bills"))||[];
 const save=()=>{localStorage.setItem("incomes",JSON.stringify(incomes)); localStorage.setItem("bills",JSON.stringify(bills));}
 const fmt=v=>`$${(parseFloat(v)||0).toFixed(2)}`;
 
-const updateDashboard=()=>{
-const totalInc=incomes.reduce((t,i)=>t+(+i.actual||0),0);
-const totalBills=bills.reduce((t,b)=>t+(+b.amount||0),0);
-const paidInc=incomes.filter(i=>i.paidDate).reduce((t,i)=>t+(+i.actual||0),0);
+let currentDate=new Date();
+function formatMonthYear(date){return date.toLocaleString('default',{month:'long',year:'numeric'});}
+function getDaysInMonth(date){return new Date(date.getFullYear(), date.getMonth()+1,0).getDate();}
+
+function updateDashboard(){
+const totalInc=incomes.filter(i=>i.date?.startsWith(currentDate.toISOString().split('-').slice(0,2).join('-'))).reduce((t,i)=>t+(+i.actual||0),0);
+const totalBills=bills.filter(b=>b.due?.startsWith(currentDate.toISOString().split('-').slice(0,2).join('-'))).reduce((t,b)=>t+(+b.amount||0),0);
+const paidInc=incomes.filter(i=>i.paidDate && i.date?.startsWith(currentDate.toISOString().split('-').slice(0,2).join('-'))).reduce((t,i)=>t+(+i.actual||0),0);
 const percent=totalInc?Math.round((paidInc/totalInc)*100):0;
 document.getElementById("dashIncome").innerText=`Income: ${fmt(totalInc)}`;
 document.getElementById("dashBills").innerText=`Bills: ${fmt(totalBills)}`;
@@ -121,6 +78,72 @@ document.getElementById("dashLeft").innerText=`Left: ${fmt(paidInc-totalBills)}`
 document.getElementById("dashPercent").innerText=`Received: ${percent}%`;
 }
 
+function renderCalendar(){
+const container=document.getElementById("calendarContainer");
+container.innerHTML="";
+document.getElementById("monthLabel").innerText=formatMonthYear(currentDate);
+const days=getDaysInMonth(currentDate);
+for(let d=1;d<=days;d++){
+  const dayCell=document.createElement("div");
+  dayCell.className="dayCell";
+  const dayStr=d.toString().padStart(2,'0');
+  const monthStr=(currentDate.getMonth()+1).toString().padStart(2,'0');
+  const fullDate=`${currentDate.getFullYear()}-${monthStr}-${dayStr}`;
+  dayCell.innerHTML=`<div class="dayHeader">${d}</div>`;
+  // Add incomes for this day
+  incomes.filter(i=>i.date===fullDate).forEach((i,index)=>{
+    const div=document.createElement("div"); div.className="entry";
+    div.innerHTML=`<input type="text" readonly value="${i.type}" style="background:${i.type==='Salary'? 'var(--salary)':'var(--other)'}">
+    <input type="text" value="${i.custom}" placeholder="Description">
+    <input type="text" value="${i.expected}" placeholder="Expected">
+    <input type="text" value="${i.actual}" placeholder="Actual">
+    <div class="progress-container"><div class="progress-fill" style="width:${i.expected?Math.min((i.actual||0)/i.expected,1)*100:0}%"></div></div>
+    <label class="switch"><input type="checkbox" ${i.paidDate?"checked":""}><span class="slider"></span></label>
+    <input type="date" value="${i.paidDate}">
+    <button class="removeBtn">🗑️</button>`;
+    const inputs=div.querySelectorAll("input");
+    inputs[0].onclick=()=>openPicker(i,inputs[0]);
+    inputs[1].oninput=e=>{i.custom=e.target.value; save();}
+    inputs[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+    inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); updateDashboard();}
+    inputs[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+    inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); updateDashboard();}
+    inputs[4].onchange=e=>{if(inputs[4].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[5].value=today;} else{i.paidDate=""; inputs[5].value="";} save(); renderCalendar();}
+    inputs[5].oninput=e=>{i.paidDate=inputs[5].value; save();}
+    div.querySelector(".removeBtn").onclick=()=>{incomes.splice(incomes.indexOf(i),1); save(); renderCalendar();}
+    dayCell.appendChild(div);
+  });
+  // Add bills for this day
+  bills.filter(b=>b.due===fullDate).forEach((b,index)=>{
+    const div=document.createElement("div"); div.className="entry";
+    div.innerHTML=`<input type="text" value="${b.name}" placeholder="Bill Name">
+    <input type="text" value="${b.amount}" placeholder="Amount">
+    <label class="switch"><input type="checkbox" ${b.paidDate?"checked":""}><span class="slider"></span></label>
+    <input type="date" value="${b.paidDate}">
+    <button class="removeBtn">🗑️</button>`;
+    const inputs=div.querySelectorAll("input");
+    inputs[0].oninput=e=>{b.name=e.target.value; save();}
+    inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+    inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); updateDashboard();}
+    inputs[2].onchange=e=>{if(inputs[2].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[3].value=today;} else{b.paidDate=""; inputs[3].value="";} save(); renderCalendar();}
+    inputs[3].oninput=e=>{b.paidDate=inputs[3].value; save();}
+    div.querySelector(".removeBtn").onclick=()=>{bills.splice(bills.indexOf(b),1); save(); renderCalendar();}
+    dayCell.appendChild(div);
+  });
+  // Add buttons to add new entry for this day
+  const addIncomeBtn=document.createElement("button"); addIncomeBtn.className="addEntryBtn"; addIncomeBtn.innerText="➕ Income";
+  addIncomeBtn.onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:"", date:fullDate}); save(); renderCalendar();}
+  dayCell.appendChild(addIncomeBtn);
+  const addBillBtn=document.createElement("button"); addBillBtn.className="addEntryBtn"; addBillBtn.innerText="➕ Bill";
+  addBillBtn.onclick=()=>{bills.push({name:"", amount:0, due:fullDate, paidDate:""}); save(); renderCalendar();}
+  dayCell.appendChild(addBillBtn);
+
+  container.appendChild(dayCell);
+}
+updateDashboard();
+}
+
+// Income type picker
 const pickerOverlay=document.getElementById("pickerOverlay");
 const pickerSheet=document.getElementById("pickerSheet");
 const incomeTypes=["Salary","Other"];
@@ -136,7 +159,7 @@ incomeTypes.forEach(type=>{
     input.style.background=type==='Salary'? 'var(--salary)':'var(--other)';
     save();
     pickerOverlay.style.display="none";
-    render();
+    renderCalendar();
   };
   pickerSheet.appendChild(option);
 });
@@ -144,71 +167,11 @@ pickerOverlay.style.display="flex";
 }
 pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
-function render(){
-const incomeTbody=document.querySelector("#incomeTable tbody");
-const billTbody=document.querySelector("#billTable tbody");
-incomeTbody.innerHTML=""; billTbody.innerHTML="";
+// Month navigation
+document.getElementById("prevMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1); renderCalendar();}
+document.getElementById("nextMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1); renderCalendar();}
 
-// Income rows
-incomes.forEach((i,index)=>{
-const tr=document.createElement("tr");
-tr.className=i.paidDate?"paidRow":"";
-const progress=(i.expected? Math.min((i.actual||0)/i.expected,1)*100 :0).toFixed(0);
-tr.innerHTML=`
-<td><input type="text" readonly value="${i.type}" style="background:${i.type==='Salary'? 'var(--salary)':'var(--other)'}"></td>
-<td><input type="text" value="${i.custom}"></td>
-<td><input type="text" value="${i.expected}"></td>
-<td><input type="text" value="${i.actual}"></td>
-<td><div class="progress-container"><div class="progress-fill" style="width:${progress}%"></div></div></td>
-<td><label class="switch"><input type="checkbox" ${i.paidDate?"checked":""}><span class="slider"></span></label></td>
-<td><input type="date" value="${i.paidDate}"></td>
-<td><button class="removeBtn">🗑️</button></td>
-`;
-
-const inputs=tr.querySelectorAll("input");
-inputs[0].onclick=()=>{openPicker(i,inputs[0]);}
-inputs[1].oninput=e=>{i.custom=e.target.value; save();}
-inputs[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); updateDashboard(); render();}
-inputs[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); updateDashboard(); render();}
-inputs[4].onchange=e=>{if(inputs[4].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[5].value=today;}else{i.paidDate=""; inputs[5].value="";} save(); render();}
-inputs[5].oninput=e=>{i.paidDate=inputs[5].value; save(); render();}
-tr.querySelector(".removeBtn").addEventListener("click",()=>{incomes.splice(index,1); save(); render();});
-incomeTbody.appendChild(tr);
-});
-
-// Bills
-bills.forEach((b,index)=>{
-const tr=document.createElement("tr");
-tr.className=b.paidDate?"paidRow":"";
-tr.innerHTML=`
-<td><input type="text" value="${b.name}"></td>
-<td><input type="text" value="${b.amount}"></td>
-<td><input type="date" value="${b.due}"></td>
-<td><label class="switch"><input type="checkbox" ${b.paidDate?"checked":""}><span class="slider"></span></label></td>
-<td><input type="date" value="${b.paidDate}"></td>
-<td><button class="removeBtn">🗑️</button></td>
-`;
-const inputs=tr.querySelectorAll("input");
-inputs[0].oninput=e=>{b.name=e.target.value; save();}
-inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); updateDashboard();}
-inputs[2].oninput=e=>{b.due=inputs[2].value; save();}
-inputs[3].onchange=e=>{if(inputs[3].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[4].value=today;}else{b.paidDate=""; inputs[4].value="";} save(); render();}
-inputs[4].oninput=e=>{b.paidDate=inputs[4].value; save(); render();}
-tr.querySelector(".removeBtn").addEventListener("click",()=>{bills.splice(index,1); save(); render();});
-billTbody.appendChild(tr);
-});
-
-updateDashboard();
-}
-
-// Add buttons
-document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();});
-document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"", amount:0, due:"", paidDate:""}); save(); render();});
-
-render();
+renderCalendar();
 });
 </script>
 </body>
