@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Fixed Running Totals</title>
+<title>Paycheck Tracker — Carryover Fix</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -33,8 +33,6 @@ button.removeBtn:hover{background:#FF7B7B;}
 input:checked+.slider{background:#4CAF50;border:1px solid #3A8E40;}
 input:checked+.slider:before{transform:translateX(16px);}
 #incomeTable tbody tr:hover,#billTable tbody tr:hover{background: #FFF1B5; transition: background 0.3s;}
-#incomeTable tbody tr[style*="B9FBC1"],#billTable tbody tr[style*="B9FBC1"]{background: linear-gradient(to right, #B9FBC1, #D1FFD6);}
-#incomeTable tbody tr[style*="FFE4E1"],#billTable tbody tr[style*="FFE4E1"]{background: linear-gradient(to right, #FFE4E1, #FFD1D1);}
 </style>
 </head>
 <body>
@@ -137,36 +135,24 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-// Update dashboard with running totals
+// Dashboard with carryover
 function updateDashboard(){
-  const y = currentDate.getFullYear();
-  const m = currentDate.getMonth();
+  const y=currentDate.getFullYear();
+  const m=currentDate.getMonth();
 
-  let carryover = 0;
-  for(let i=0;i<m;i++){
-    carryover += incomes.filter(e=>{ const d=parseLocalDate(e.date); return d&&d.getFullYear()===y&&d.getMonth()===i; })
-      .reduce((s,e)=>s + (parseFloat(e.actual)||0),0);
+  // Carryover from previous months
+  let leftover=0;
+  for(let i=0;i<=m;i++){
+    const incomeMonth = incomes.filter(e=>{ const d=parseLocalDate(e.date); return d&&d.getFullYear()===y&&d.getMonth()===i; }).reduce((s,e)=>s+(parseFloat(e.actual)||0),0);
+    const billsMonth = bills.filter(b=>{ const d=parseLocalDate(b.date); return d&&d.getFullYear()===y&&d.getMonth()===i; }).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
 
-    carryover -= bills.filter(b=>{ const d=parseLocalDate(b.date); return d&&d.getFullYear()===y&&d.getMonth()===i; })
-      .reduce((s,b)=>s + (parseFloat(b.amount)||0),0);
+    if(i<m) leftover += incomeMonth - billsMonth; // previous months carryover
+    else var totalIncomeThisMonth=incomeMonth, billsThisMonth=billsMonth; // current month
   }
 
-  // Total income for the month (all days)
-  const currentIncome = incomes.filter(e=>{ const d=parseLocalDate(e.date); return d&&d.getFullYear()===y&&d.getMonth()===m; })
-    .reduce((s,e)=>s+(parseFloat(e.actual)||0),0);
-
-  const billsThisMonth = bills.filter(b=>{ const d=parseLocalDate(b.date); return d&&d.getFullYear()===y&&d.getMonth()===m; })
-    .reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
-
-  const earlyPaid = bills.filter(b=>{ const paid=parseLocalDate(b.paidDate); const due=parseLocalDate(b.date); return paid&&paid.getFullYear()===y&&paid.getMonth()===m&&due.getMonth()>m; })
-    .reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
-
-  const totalIncome = carryover + currentIncome;
-  const leftover = totalIncome - billsThisMonth - earlyPaid;
-
-  document.getElementById("dashIncome").textContent = totalIncome.toFixed(2);
-  document.getElementById("dashBills").textContent = billsThisMonth.toFixed(2);
-  document.getElementById("dashLeft").textContent = leftover.toFixed(2);
+  document.getElementById("dashIncome").textContent=(leftover+totalIncomeThisMonth).toFixed(2);
+  document.getElementById("dashBills").textContent=billsThisMonth.toFixed(2);
+  document.getElementById("dashLeft").textContent=(leftover+totalIncomeThisMonth-billsThisMonth).toFixed(2);
 }
 
 // Render tables
@@ -178,7 +164,7 @@ function render(){
   incomes.forEach((i,x)=>{
     const d=parseLocalDate(i.date);
     if(d && d.getFullYear()===currentDate.getFullYear() && d.getMonth()===currentDate.getMonth() && (!selectedDay || d.getDate()===selectedDay)){
-      const tr=document.createElement("tr");tr.style.background=i.receivedDate?"#B9FBC1":"#FFE4E1";
+      const tr=document.createElement("tr");
       tr.innerHTML=`
       <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${x}].type=this.value;saveData();"></td>
       <td><input type="text" value="${i.description||''}" onchange="incomes[${x}].description=this.value;saveData();"></td>
@@ -192,7 +178,7 @@ function render(){
   bills.forEach((b,x)=>{
     const d=parseLocalDate(b.date);
     if(d && d.getFullYear()===currentDate.getFullYear() && d.getMonth()===currentDate.getMonth() && (!selectedDay || d.getDate()===selectedDay)){
-      const tr=document.createElement("tr");tr.style.background=b.paidDate?"#B9FBC1":"#FFE4E1";
+      const tr=document.createElement("tr");
       tr.innerHTML=`
       <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();"></td>
       <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();"></td>
