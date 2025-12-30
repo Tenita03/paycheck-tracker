@@ -3,22 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker Calendar v42</title>
+<title>Paycheck Planner v43</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
-  --salary:#A0E7E5; --other:#FFAEBC; --paid:#FFF4C1; --border:#E0E0E0;
-  --progress-bg:#E0E0E0; --progress-fill:#FFD6A5;
+  --salary:#A0E7E5; --other:#FFAEBC; --bill:#FFDAC1; --paid:#FFF4C1;
+  --border:#E0E0E0; --progress-bg:#E0E0E0; --progress-fill:#FFD6A5;
 }
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh;}
 header{padding:12px; font-size:26px; font-weight:700; text-align:center;}
 .dashboard{display:flex; justify-content:space-around; font-weight:700; padding:10px 0; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.1); margin:0 10px 10px;}
 .controls{display:flex; justify-content:space-between; align-items:center; margin:0 10px 6px;}
 .controls button{padding:6px 12px; border-radius:10px; background:var(--accent); border:none; font-weight:700; cursor:pointer;}
-#calendarContainer{flex:1; display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:minmax(80px,auto); gap:4px; padding:0 10px 10px;}
-.dayCell{background:#fff; border-radius:12px; padding:4px; box-shadow:0 2px 4px rgba(0,0,0,0.08); display:flex; flex-direction:column; overflow-y:auto; max-height:120px;}
-.dayHeader{font-weight:700; font-size:14px; margin-bottom:2px;}
-.entry{border-radius:8px; padding:2px 4px; margin-bottom:2px; font-size:12px; background:#F2F2F7; display:flex; flex-direction:column;}
+#plannerContainer{flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:4px; padding:0 10px 10px;}
+.dayColumn{background:#fff; border-radius:12px; padding:4px; box-shadow:0 2px 4px rgba(0,0,0,0.08); display:flex; flex-direction:column; max-height:calc(100vh - 180px); overflow-y:auto;}
+.dayHeader{font-weight:700; font-size:14px; margin-bottom:4px; text-align:center;}
+.entry{border-radius:8px; padding:4px; margin-bottom:4px; font-size:12px; background:#F2F2F7; cursor:pointer;}
+.entry.expanded{background:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.1);}
 .entry input[type=text], .entry input[type=number], .entry input[type=date]{width:100%; font-size:12px; padding:2px 4px; margin:1px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;}
 .switch{position:relative; display:inline-block; width:36px; height:20px; margin-top:2px;}
 .switch input{opacity:0; width:0; height:0;}
@@ -26,7 +27,6 @@ header{padding:12px; font-size:26px; font-weight:700; text-align:center;}
 .slider:before{position:absolute; content:""; height:16px; width:16px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;}
 input:checked + .slider{background-color:#B9FBC1;}
 input:checked + .slider:before{transform:translateX(16px);}
-.paidRow{background:var(--paid);}
 .progress-container{width:100%; background:var(--progress-bg); border-radius:6px; height:8px; margin-top:2px;}
 .progress-fill{height:100%; background:var(--progress-fill); border-radius:6px;}
 .addEntryBtn{padding:2px 6px; font-size:12px; margin-top:2px; border-radius:8px; background:var(--accent); border:none; cursor:pointer;}
@@ -38,7 +38,7 @@ input:checked + .slider:before{transform:translateX(16px);}
 </head>
 <body>
 
-<header>💰 Paycheck Tracker</header>
+<header>💰 Paycheck Planner</header>
 <div class="dashboard">
   <span id="dashIncome">Income: $0.00</span>
   <span id="dashBills">Bills: $0.00</span>
@@ -50,7 +50,7 @@ input:checked + .slider:before{transform:translateX(16px);}
   <span id="monthLabel"></span>
   <button id="nextMonth">Next &gt;</button>
 </div>
-<div id="calendarContainer"></div>
+<div id="plannerContainer"></div>
 
 <div class="picker-overlay" id="pickerOverlay"><div class="picker-sheet" id="pickerSheet"></div></div>
 
@@ -68,79 +68,16 @@ function formatMonthYear(date){return date.toLocaleString('default',{month:'long
 function getDaysInMonth(date){return new Date(date.getFullYear(), date.getMonth()+1,0).getDate();}
 
 function updateDashboard(){
-const totalInc=incomes.filter(i=>i.date?.startsWith(currentDate.toISOString().split('-').slice(0,2).join('-'))).reduce((t,i)=>t+(+i.actual||0),0);
-const totalBills=bills.filter(b=>b.due?.startsWith(currentDate.toISOString().split('-').slice(0,2).join('-'))).reduce((t,b)=>t+(+b.amount||0),0);
-const paidInc=incomes.filter(i=>i.paidDate && i.date?.startsWith(currentDate.toISOString().split('-').slice(0,2).join('-'))).reduce((t,i)=>t+(+i.actual||0),0);
+const monthStr=(currentDate.getMonth()+1).toString().padStart(2,'0');
+const monthFilter=date=>date?.startsWith(`${currentDate.getFullYear()}-${monthStr}`);
+const totalInc=incomes.filter(i=>monthFilter(i.date)).reduce((t,i)=>t+(+i.actual||0),0);
+const totalBills=bills.filter(b=>monthFilter(b.due)).reduce((t,b)=>t+(+b.amount||0),0);
+const paidInc=incomes.filter(i=>i.paidDate && monthFilter(i.date)).reduce((t,i)=>t+(+i.actual||0),0);
 const percent=totalInc?Math.round((paidInc/totalInc)*100):0;
 document.getElementById("dashIncome").innerText=`Income: ${fmt(totalInc)}`;
 document.getElementById("dashBills").innerText=`Bills: ${fmt(totalBills)}`;
 document.getElementById("dashLeft").innerText=`Left: ${fmt(paidInc-totalBills)}`;
 document.getElementById("dashPercent").innerText=`Received: ${percent}%`;
-}
-
-function renderCalendar(){
-const container=document.getElementById("calendarContainer");
-container.innerHTML="";
-document.getElementById("monthLabel").innerText=formatMonthYear(currentDate);
-const days=getDaysInMonth(currentDate);
-for(let d=1;d<=days;d++){
-  const dayCell=document.createElement("div");
-  dayCell.className="dayCell";
-  const dayStr=d.toString().padStart(2,'0');
-  const monthStr=(currentDate.getMonth()+1).toString().padStart(2,'0');
-  const fullDate=`${currentDate.getFullYear()}-${monthStr}-${dayStr}`;
-  dayCell.innerHTML=`<div class="dayHeader">${d}</div>`;
-  // Add incomes for this day
-  incomes.filter(i=>i.date===fullDate).forEach((i,index)=>{
-    const div=document.createElement("div"); div.className="entry";
-    div.innerHTML=`<input type="text" readonly value="${i.type}" style="background:${i.type==='Salary'? 'var(--salary)':'var(--other)'}">
-    <input type="text" value="${i.custom}" placeholder="Description">
-    <input type="text" value="${i.expected}" placeholder="Expected">
-    <input type="text" value="${i.actual}" placeholder="Actual">
-    <div class="progress-container"><div class="progress-fill" style="width:${i.expected?Math.min((i.actual||0)/i.expected,1)*100:0}%"></div></div>
-    <label class="switch"><input type="checkbox" ${i.paidDate?"checked":""}><span class="slider"></span></label>
-    <input type="date" value="${i.paidDate}">
-    <button class="removeBtn">🗑️</button>`;
-    const inputs=div.querySelectorAll("input");
-    inputs[0].onclick=()=>openPicker(i,inputs[0]);
-    inputs[1].oninput=e=>{i.custom=e.target.value; save();}
-    inputs[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-    inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); updateDashboard();}
-    inputs[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-    inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); updateDashboard();}
-    inputs[4].onchange=e=>{if(inputs[4].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[5].value=today;} else{i.paidDate=""; inputs[5].value="";} save(); renderCalendar();}
-    inputs[5].oninput=e=>{i.paidDate=inputs[5].value; save();}
-    div.querySelector(".removeBtn").onclick=()=>{incomes.splice(incomes.indexOf(i),1); save(); renderCalendar();}
-    dayCell.appendChild(div);
-  });
-  // Add bills for this day
-  bills.filter(b=>b.due===fullDate).forEach((b,index)=>{
-    const div=document.createElement("div"); div.className="entry";
-    div.innerHTML=`<input type="text" value="${b.name}" placeholder="Bill Name">
-    <input type="text" value="${b.amount}" placeholder="Amount">
-    <label class="switch"><input type="checkbox" ${b.paidDate?"checked":""}><span class="slider"></span></label>
-    <input type="date" value="${b.paidDate}">
-    <button class="removeBtn">🗑️</button>`;
-    const inputs=div.querySelectorAll("input");
-    inputs[0].oninput=e=>{b.name=e.target.value; save();}
-    inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
-    inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); updateDashboard();}
-    inputs[2].onchange=e=>{if(inputs[2].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[3].value=today;} else{b.paidDate=""; inputs[3].value="";} save(); renderCalendar();}
-    inputs[3].oninput=e=>{b.paidDate=inputs[3].value; save();}
-    div.querySelector(".removeBtn").onclick=()=>{bills.splice(bills.indexOf(b),1); save(); renderCalendar();}
-    dayCell.appendChild(div);
-  });
-  // Add buttons to add new entry for this day
-  const addIncomeBtn=document.createElement("button"); addIncomeBtn.className="addEntryBtn"; addIncomeBtn.innerText="➕ Income";
-  addIncomeBtn.onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:"", date:fullDate}); save(); renderCalendar();}
-  dayCell.appendChild(addIncomeBtn);
-  const addBillBtn=document.createElement("button"); addBillBtn.className="addEntryBtn"; addBillBtn.innerText="➕ Bill";
-  addBillBtn.onclick=()=>{bills.push({name:"", amount:0, due:fullDate, paidDate:""}); save(); renderCalendar();}
-  dayCell.appendChild(addBillBtn);
-
-  container.appendChild(dayCell);
-}
-updateDashboard();
 }
 
 // Income type picker
@@ -159,7 +96,7 @@ incomeTypes.forEach(type=>{
     input.style.background=type==='Salary'? 'var(--salary)':'var(--other)';
     save();
     pickerOverlay.style.display="none";
-    renderCalendar();
+    renderPlanner();
   };
   pickerSheet.appendChild(option);
 });
@@ -167,11 +104,81 @@ pickerOverlay.style.display="flex";
 }
 pickerOverlay.onclick=e=>{if(e.target===pickerOverlay)pickerOverlay.style.display="none";}
 
-// Month navigation
-document.getElementById("prevMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1); renderCalendar();}
-document.getElementById("nextMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1); renderCalendar();}
+function renderPlanner(){
+const container=document.getElementById("plannerContainer");
+container.innerHTML="";
+document.getElementById("monthLabel").innerText=formatMonthYear(currentDate);
+const days=getDaysInMonth(currentDate);
+for(let d=1;d<=days;d++){
+  const dayColumn=document.createElement("div"); dayColumn.className="dayColumn";
+  const dayStr=d.toString().padStart(2,'0');
+  const monthStr=(currentDate.getMonth()+1).toString().padStart(2,'0');
+  const fullDate=`${currentDate.getFullYear()}-${monthStr}-${dayStr}`;
+  dayColumn.innerHTML=`<div class="dayHeader">${d}</div>`;
+  
+  const addIncomeBtn=document.createElement("button"); addIncomeBtn.className="addEntryBtn"; addIncomeBtn.innerText="➕ Income";
+  addIncomeBtn.onclick=()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:"", date:fullDate}); save(); renderPlanner();}
+  dayColumn.appendChild(addIncomeBtn);
+  const addBillBtn=document.createElement("button"); addBillBtn.className="addEntryBtn"; addBillBtn.innerText="➕ Bill";
+  addBillBtn.onclick=()=>{bills.push({name:"", amount:0, due:fullDate, paidDate:""}); save(); renderPlanner();}
+  dayColumn.appendChild(addBillBtn);
+  
+  // Add incomes
+  incomes.filter(i=>i.date===fullDate).forEach(i=>{
+    const div=document.createElement("div"); div.className="entry"; div.innerText=`${i.type} ${fmt(i.actual||0)}`;
+    div.onclick=()=>{div.classList.toggle("expanded"); if(div.classList.contains("expanded")){div.innerHTML=`<input type="text" readonly value="${i.type}" style="background:${i.type==='Salary'? 'var(--salary)':'var(--other)'}">
+      <input type="text" value="${i.custom}" placeholder="Description">
+      <input type="text" value="${i.expected}" placeholder="Expected">
+      <input type="text" value="${i.actual}" placeholder="Actual">
+      <div class="progress-container"><div class="progress-fill" style="width:${i.expected?Math.min((i.actual||0)/i.expected,1)*100:0}%"></div></div>
+      <label class="switch"><input type="checkbox" ${i.paidDate?"checked":""}><span class="slider"></span></label>
+      <input type="date" value="${i.paidDate}">
+      <button class="removeBtn">🗑️</button>`;} 
+    const inputs=div.querySelectorAll("input");
+    if(inputs.length>0){
+      inputs[0].onclick=()=>openPicker(i,inputs[0]);
+      inputs[1].oninput=e=>{i.custom=e.target.value; save();}
+      inputs[2].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+      inputs[2].onblur=e=>{i.expected=parseFloat(inputs[2].value)||0; save(); updateDashboard();}
+      inputs[3].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+      inputs[3].onblur=e=>{i.actual=parseFloat(inputs[3].value)||0; save(); updateDashboard();}
+      inputs[4].onchange=e=>{if(inputs[4].checked){const today=new Date().toISOString().split("T")[0]; i.paidDate=today; inputs[5].value=today;}else{i.paidDate=""; inputs[5].value="";} save(); renderPlanner();}
+      inputs[5].oninput=e=>{i.paidDate=inputs[5].value; save();}
+      div.querySelector(".removeBtn").onclick=()=>{incomes.splice(incomes.indexOf(i),1); save(); renderPlanner();}
+    }
+    dayColumn.appendChild(div);
+  });
+  
+  // Add bills
+  bills.filter(b=>b.due===fullDate).forEach(b=>{
+    const div=document.createElement("div"); div.className="entry"; div.innerText=`${b.name} ${fmt(b.amount||0)}`;
+    div.onclick=()=>{div.classList.toggle("expanded"); if(div.classList.contains("expanded")){div.innerHTML=`<input type="text" value="${b.name}" placeholder="Bill Name">
+      <input type="text" value="${b.amount}" placeholder="Amount">
+      <label class="switch"><input type="checkbox" ${b.paidDate?"checked":""}><span class="slider"></span></label>
+      <input type="date" value="${b.paidDate}">
+      <button class="removeBtn">🗑️</button>`;}
+    const inputs=div.querySelectorAll("input");
+    if(inputs.length>0){
+      inputs[0].oninput=e=>{b.name=e.target.value; save();}
+      inputs[1].oninput=e=>e.target.value=e.target.value.replace(/[^0-9.]/g,'');
+      inputs[1].onblur=e=>{b.amount=parseFloat(inputs[1].value)||0; save(); updateDashboard();}
+      inputs[2].onchange=e=>{if(inputs[2].checked){const today=new Date().toISOString().split("T")[0]; b.paidDate=today; inputs[3].value=today;} else{b.paidDate=""; inputs[3].value="";} save(); renderPlanner();}
+      inputs[3].oninput=e=>{b.paidDate=inputs[3].value; save();}
+      div.querySelector(".removeBtn").onclick=()=>{bills.splice(bills.indexOf(b),1); save(); renderPlanner();}
+    }
+    dayColumn.appendChild(div);
+  });
+  
+  container.appendChild(dayColumn);
+}
+updateDashboard();
+}
 
-renderCalendar();
+// Month navigation
+document.getElementById("prevMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1); renderPlanner();}
+document.getElementById("nextMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1); renderPlanner();}
+
+renderPlanner();
 });
 </script>
 </body>
