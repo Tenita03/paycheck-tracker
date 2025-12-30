@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Refined Visuals</title>
+<title>Paycheck Tracker — Polished App Style</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -26,6 +26,14 @@ header{text-align:center;font-size:28px;padding:12px;}
   border:none;
   cursor:pointer;
 }
+#todayBtn{
+  font-size:12px;
+  padding:2px 6px;
+  border-radius:6px;
+  background:#FFD6A5;
+  border:none;
+  cursor:pointer;
+}
 
 /* Mini calendar */
 #miniCalendarContainer{width:150px;margin:0 auto;display:flex;justify-content:center;}
@@ -34,8 +42,18 @@ header{text-align:center;font-size:28px;padding:12px;}
   width:18px;height:18px;font-size:9px;text-align:center;
   border:1px solid #ccc;cursor:pointer;
 }
-#miniCalendar td.today{background:#FFD6A5;border-radius:50%;}
-#miniCalendar td.selected{background:#FFB347;border-radius:50%;}
+#miniCalendar td.today{
+  background:#FFB347;
+  color:#fff;
+  border-radius:50%;
+  font-weight:bold;
+}
+#miniCalendar td.selected{
+  background:#FF7F50;
+  color:#fff;
+  border-radius:50%;
+  font-weight:bold;
+}
 
 /* Dashboard */
 .dashboard{display:flex;justify-content:space-around;align-items:center;
@@ -45,7 +63,7 @@ background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:15px;}
 
 /* Tables */
 .section{margin:10px;}
-table{width:100%;border-collapse:collapse;}
+table{width:100%;border-collapse:collapse;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;}
 table tbody{display:block;max-height:200px;overflow-y:auto;}
 table thead,table tbody tr{display:table;width:100%;table-layout:fixed;}
 th,td{border:1px solid #ccc;padding:3px 5px;font-size:12px;text-align:center;height:30px;}
@@ -77,6 +95,22 @@ background:#d1d5db;border-radius:24px;transition:.4s;}
 background:#fff;border-radius:50%;transition:.4s;}
 input:checked+.slider{background:#4CAF50;border:1px solid #3A8E40;}
 input:checked+.slider:before{transform:translateX(16px);}
+
+/* Hover highlights */
+#incomeTable tbody tr:hover,
+#billTable tbody tr:hover{
+  background: #FFF1B5; /* subtle yellow highlight */
+  transition: background 0.3s;
+}
+/* Row gradients */
+#incomeTable tbody tr[style*="B9FBC1"],
+#billTable tbody tr[style*="B9FBC1"]{
+  background: linear-gradient(to right, #B9FBC1, #D1FFD6);
+}
+#incomeTable tbody tr[style*="FFE4E1"],
+#billTable tbody tr[style*="FFE4E1"]{
+  background: linear-gradient(to right, #FFE4E1, #FFD1D1);
+}
 </style>
 </head>
 <body>
@@ -89,6 +123,7 @@ input:checked+.slider:before{transform:translateX(16px);}
     <select id="monthSelect"></select>
     <select id="yearSelect"></select>
     <button id="nextMonth">▶</button>
+    <button id="todayBtn">Today</button>
   </div>
   <div id="miniCalendarContainer">
     <table id="miniCalendar">
@@ -153,6 +188,7 @@ const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
 const prevMonth=document.getElementById("prevMonth");
 const nextMonth=document.getElementById("nextMonth");
+const todayBtn=document.getElementById("todayBtn");
 
 for(let m=0;m<12;m++){
   const o=document.createElement("option");
@@ -168,21 +204,9 @@ yearSelect.value=currentDate.getFullYear();
 
 monthSelect.onchange=()=>{currentDate.setMonth(+monthSelect.value);render();}
 yearSelect.onchange=()=>{currentDate.setFullYear(+yearSelect.value);render();}
-
-prevMonth.onclick=()=>{
-  currentDate.setMonth(currentDate.getMonth()-1);
-  selectedDay=null;
-  monthSelect.value=currentDate.getMonth();
-  yearSelect.value=currentDate.getFullYear();
-  render();
-};
-nextMonth.onclick=()=>{
-  currentDate.setMonth(currentDate.getMonth()+1);
-  selectedDay=null;
-  monthSelect.value=currentDate.getMonth();
-  yearSelect.value=currentDate.getFullYear();
-  render();
-};
+prevMonth.onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1);selectedDay=null;monthSelect.value=currentDate.getMonth();yearSelect.value=currentDate.getFullYear();render();}
+nextMonth.onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1);selectedDay=null;monthSelect.value=currentDate.getMonth();yearSelect.value=currentDate.getFullYear();render();}
+todayBtn.onclick=()=>{currentDate=new Date();selectedDay=currentDate.getDate();monthSelect.value=currentDate.getMonth();yearSelect.value=currentDate.getFullYear();render();};
 
 function renderMiniCalendar(){
   const body=document.querySelector("#miniCalendar tbody");
