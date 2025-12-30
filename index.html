@@ -3,28 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v40 + Mini Calendar</title>
+<title>Paycheck Tracker v40 Styled</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#FDF9F5;color:#333;}
-header{padding:12px;font-size:28px;text-align:center;}
-.dashboard{display:flex;justify-content:space-around;padding:10px;background:#fff;border-radius:10px;margin:0 10px;}
-.monthNav{display:flex;justify-content:center;gap:10px;margin:10px;}
-#miniCalendar{border-collapse:collapse;margin:auto;}
-#miniCalendar th,#miniCalendar td{width:32px;height:32px;text-align:center;border:1px solid #ccc;}
-#miniCalendar td.today{background:#FFD6A5;border-radius:50%;}
-.section{margin:10px;}
-.section h3{margin:4px 0;}
-.card{background:#fff;border-radius:12px;padding:14px;margin:8px 0;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-input[type=text], input[type=number], input[type=date]{width:100%;padding:8px;margin:6px 0;border-radius:10px;border:1px solid #ccc;box-sizing:border-box;font-size:16px;}
-.addEntryBtn{padding:8px 12px;border-radius:12px;background:#FFD6A5;border:none;cursor:pointer;margin-bottom:8px;font-size:16px;}
-.switch{position:relative;display:inline-block;width:36px;height:20px;margin-left:4px;}
-.switch input{opacity:0;width:0;height:0;}
-.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#d1d5db;border-radius:24px;transition:0.4s;}
-.slider:before{position:absolute;content:"";height:16px;width:16px;left:2px;bottom:2px;background:white;border-radius:50%;transition:0.4s;}
-input:checked + .slider{background-color:#B9FBC1;}
-input:checked + .slider:before{transform:translateX(16px);}
-.progress-container{width:100%;background:#E0E0E0;border-radius:6px;height:8px;margin-top:4px;}
-.progress-fill{height:100%;background:#FFD6A5;border-radius:6px;}
+body { margin:0; font-family:Arial,sans-serif; background:#FDF9F5; color:#333; }
+header { padding:12px; font-size:28px; text-align:center; }
+.dashboard { display:flex; justify-content:space-around; padding:10px; background:#fff; border-radius:10px; margin:0 10px; }
+.monthNav { display:flex; justify-content:center; gap:10px; margin:10px; }
+#miniCalendar { border-collapse:collapse; margin:auto; }
+#miniCalendar th,#miniCalendar td { width:32px; height:32px; text-align:center; border:1px solid #ccc; }
+#miniCalendar td.today { background:#FFD6A5; border-radius:50%; }
+.section { margin:10px; }
+.section h3 { margin:4px 0; }
+.card { background:#fff; border-radius:12px; padding:14px; margin:8px 0; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+.input-group { display:flex; flex-direction:column; margin-bottom:6px; }
+.input-group input { padding:8px; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+.inline-group { display:flex; gap:6px; align-items:center; }
+.addEntryBtn { padding:8px 12px; border-radius:12px; background:#FFD6A5; border:none; cursor:pointer; margin-bottom:8px; font-size:16px; }
+.switch { position:relative; display:inline-block; width:36px; height:20px; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:24px; transition:0.4s; }
+.slider:before { position:absolute; content:""; height:16px; width:16px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s; }
+input:checked + .slider { background-color:#B9FBC1; }
+input:checked + .slider:before { transform:translateX(16px); }
+.progress-container { width:100%; background:#E0E0E0; border-radius:6px; height:8px; margin-top:4px; }
+.progress-fill { height:100%; background:#FFD6A5; border-radius:6px; }
 </style>
 </head>
 <body>
@@ -69,28 +71,27 @@ input:checked + .slider:before{transform:translateX(16px);}
 </div>
 
 <script>
-let incomes=[]; let bills=[];
-let currentDate=new Date();
+let incomes=[], bills=[];
+let currentDate = new Date();
 
-function updateDashboard(){
-  let filteredInc=incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
-  let filteredBills=bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
+function updateDashboard() {
+  let filteredInc = incomes.filter(i => i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
+  let filteredBills = bills.filter(b => b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
 
-  let totalInc=filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
-  let totalBills=filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
-  let paidInc=filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
-  let percent=totalInc?Math.round((paidInc/totalInc)*100):0;
+  let totalInc = filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
+  let totalBills = filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
+  let paidInc = filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
+  let percent = totalInc?Math.round((paidInc/totalInc)*100):0;
 
-  document.getElementById("dashIncome").innerText=`Income: $${totalInc.toFixed(2)}`;
-  document.getElementById("dashBills").innerText=`Bills: $${totalBills.toFixed(2)}`;
-  document.getElementById("dashLeft").innerText=`Left: $${(paidInc-totalBills).toFixed(2)}`;
-  document.getElementById("dashPercent").innerText=`Received: ${percent}%`;
+  document.getElementById("dashIncome").innerText = `Income: $${totalInc.toFixed(2)}`;
+  document.getElementById("dashBills").innerText = `Bills: $${totalBills.toFixed(2)}`;
+  document.getElementById("dashLeft").innerText = `Left: $${(paidInc-totalBills).toFixed(2)}`;
+  document.getElementById("dashPercent").innerText = `Received: ${percent}%`;
 }
 
-// Mini Calendar
-function renderMiniCalendar(){
+function renderMiniCalendar() {
   const tbody=document.querySelector("#miniCalendar tbody"); tbody.innerHTML="";
-  const month=currentDate.getMonth(); const year=currentDate.getFullYear();
+  const month=currentDate.getMonth(), year=currentDate.getFullYear();
   const firstDay=new Date(year,month,1).getDay();
   const lastDate=new Date(year,month+1,0).getDate();
   let row=document.createElement("tr");
@@ -103,24 +104,35 @@ function renderMiniCalendar(){
   tbody.appendChild(row);
 }
 
-// Income card layout as v40
-function createIncomeCard(i){
+function createIncomeCard(i) {
   const div=document.createElement("div"); div.className="card";
+  const typeGroup=document.createElement("div"); typeGroup.className="input-group";
   const typeInput=document.createElement("input"); typeInput.type="text"; typeInput.value=i.type||"Salary"; typeInput.placeholder="Type (Salary/Other)";
-  typeInput.addEventListener("input",e=>{i.type=e.target.value; updateDashboard();});
+  typeInput.addEventListener("input",e=>i.type=e.target.value);
+  typeGroup.appendChild(typeInput);
+
+  const descGroup=document.createElement("div"); descGroup.className="input-group";
   const descInput=document.createElement("input"); descInput.type="text"; descInput.value=i.custom||""; descInput.placeholder="Description";
-  descInput.addEventListener("input",e=>{i.custom=e.target.value;});
+  descInput.addEventListener("input",e=>i.custom=e.target.value);
+  descGroup.appendChild(descInput);
+
+  const dateGroup=document.createElement("div"); dateGroup.className="input-group";
   const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=i.date||new Date().toISOString().split("T")[0];
   dateInput.addEventListener("input",e=>{i.date=e.target.value; renderEntries();});
+  dateGroup.appendChild(dateInput);
+
+  const amountGroup=document.createElement("div"); amountGroup.className="inline-group";
   const expectedInput=document.createElement("input"); expectedInput.type="number"; expectedInput.value=i.expected||0; expectedInput.placeholder="Expected";
-  expectedInput.addEventListener("input",e=>{i.expected=parseFloat(e.target.value)||0; updateDashboard();});
+  expectedInput.addEventListener("input",e=>i.expected=parseFloat(e.target.value)||0);
   const actualInput=document.createElement("input"); actualInput.type="number"; actualInput.value=i.actual||0; actualInput.placeholder="Actual";
-  actualInput.addEventListener("input",e=>{i.actual=parseFloat(e.target.value)||0; updateDashboard();});
+  actualInput.addEventListener("input",e=>i.actual=parseFloat(e.target.value)||0);
+  amountGroup.append(expectedInput, actualInput);
 
   const progress=document.createElement("div"); progress.className="progress-container";
   const fill=document.createElement("div"); fill.className="progress-fill"; fill.style.width=`${i.expected?Math.min(i.actual/i.expected,1)*100:0}%`;
   progress.appendChild(fill);
 
+  const paidGroup=document.createElement("div"); paidGroup.className="inline-group";
   const paidLabel=document.createElement("label"); paidLabel.className="switch";
   const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!i.paidDate;
   const paidSpan=document.createElement("span"); paidSpan.className="slider";
@@ -128,24 +140,32 @@ function createIncomeCard(i){
   const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=i.paidDate||"";
   paidInput.addEventListener("change",()=>{i.paidDate=paidInput.checked?new Date().toISOString().split("T")[0]:""; paidDateInput.value=i.paidDate; updateDashboard();});
   paidDateInput.addEventListener("input",()=>{i.paidDate=paidDateInput.value; updateDashboard();});
+  paidGroup.append(paidLabel, paidDateInput);
 
   const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
 
-  // Append in same order/format as v40
-  div.append(typeInput, descInput, dateInput, expectedInput, actualInput, progress, paidLabel, paidDateInput, removeBtn);
+  div.append(typeGroup, descGroup, dateGroup, amountGroup, progress, paidGroup, removeBtn);
   return div;
 }
 
-// Bills card layout as v40
-function createBillCard(b){
+function createBillCard(b) {
   const div=document.createElement("div"); div.className="card";
+  const nameGroup=document.createElement("div"); nameGroup.className="input-group";
   const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.value=b.name||""; nameInput.placeholder="Bill Name";
-  nameInput.addEventListener("input",()=>{b.name=nameInput.value;});
+  nameInput.addEventListener("input",()=>b.name=nameInput.value);
+  nameGroup.appendChild(nameInput);
+
+  const dateGroup=document.createElement("div"); dateGroup.className="input-group";
   const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=b.date||new Date().toISOString().split("T")[0];
   dateInput.addEventListener("input",()=>{b.date=dateInput.value; renderEntries();});
-  const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
-  amountInput.addEventListener("input",()=>{b.amount=parseFloat(amountInput.value)||0; updateDashboard();});
+  dateGroup.appendChild(dateInput);
 
+  const amountGroup=document.createElement("div"); amountGroup.className="input-group";
+  const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
+  amountInput.addEventListener("input",()=>b.amount=parseFloat(amountInput.value)||0);
+  amountGroup.appendChild(amountInput);
+
+  const paidGroup=document.createElement("div"); paidGroup.className="inline-group";
   const paidLabel=document.createElement("label"); paidLabel.className="switch";
   const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!b.paidDate;
   const paidSpan=document.createElement("span"); paidSpan.className="slider";
@@ -153,15 +173,14 @@ function createBillCard(b){
   const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=b.paidDate||"";
   paidInput.addEventListener("change",()=>{b.paidDate=paidInput.checked?new Date().toISOString().split("T")[0]:""; paidDateInput.value=b.paidDate; updateDashboard();});
   paidDateInput.addEventListener("input",()=>{b.paidDate=paidDateInput.value; updateDashboard();});
+  paidGroup.append(paidLabel, paidDateInput);
 
   const removeBtn=document.createElement("button"); removeBtn.textContent="🗑️"; removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
 
-  // Append in v40 order/format
-  div.append(nameInput, dateInput, amountInput, paidLabel, paidDateInput, removeBtn);
+  div.append(nameGroup, dateGroup, amountGroup, paidGroup, removeBtn);
   return div;
 }
 
-// Render entries filtered by month
 function renderEntries(){
   const incomeC=document.getElementById("incomeContainer"); const billC=document.getElementById("billContainer");
   incomeC.innerHTML=""; billC.innerHTML="";
