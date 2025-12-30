@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker VS40 Clean</title>
+<title>Paycheck Tracker VS40 Functional</title>
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#FDF9F5; color:#333; }
 header { padding:12px; font-size:28px; text-align:center; }
@@ -70,135 +70,138 @@ button.removeBtn { background:#FF6B6B; color:white; border:none; border-radius:8
 </div>
 
 <script>
-let incomes=[], bills=[];
+// Load from localStorage or initialize
+let incomes = JSON.parse(localStorage.getItem("incomes")) || [];
+let bills = JSON.parse(localStorage.getItem("bills")) || [];
 let currentDate = new Date();
 
-// --- Dashboard ---
-function updateDashboard() {
-  const filteredInc = incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
-  const filteredBills = bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
-  const totalInc = filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
-  const totalBills = filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
-  const paidInc = filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
-  const percent = totalInc ? Math.round((paidInc/totalInc)*100) : 0;
-  document.getElementById("dashIncome").innerText = `Income: $${totalInc.toFixed(2)}`;
-  document.getElementById("dashBills").innerText = `Bills: $${totalBills.toFixed(2)}`;
-  document.getElementById("dashLeft").innerText = `Left: $${(paidInc-totalBills).toFixed(2)}`;
-  document.getElementById("dashPercent").innerText = `Received: ${percent}%`;
+// --- Month / Year Dropdowns ---
+const monthSelect = document.getElementById("monthSelect");
+const yearSelect = document.getElementById("yearSelect");
+for(let m=0;m<12;m++){
+    let opt = document.createElement("option");
+    opt.value = m;
+    opt.text = new Date(2000,m,1).toLocaleString('default',{month:'long'});
+    monthSelect.appendChild(opt);
 }
+for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){
+    let opt = document.createElement("option");
+    opt.value = y; opt.text = y; yearSelect.appendChild(opt);
+}
+monthSelect.value = currentDate.getMonth();
+yearSelect.value = currentDate.getFullYear();
+monthSelect.onchange = ()=>{ currentDate.setMonth(parseInt(monthSelect.value)); render(); }
+yearSelect.onchange = ()=>{ currentDate.setFullYear(parseInt(yearSelect.value)); render(); }
 
 // --- Mini Calendar ---
-function renderMiniCalendar() {
-  const tbody=document.querySelector("#miniCalendar tbody"); tbody.innerHTML="";
-  const month=currentDate.getMonth(), year=currentDate.getFullYear();
-  const firstDay=new Date(year,month,1).getDay();
-  const lastDate=new Date(year,month+1,0).getDate();
-  let row=document.createElement("tr");
-  for(let i=0;i<firstDay;i++){ row.appendChild(document.createElement("td")); }
-  for(let d=1;d<=lastDate;d++){
-    const td=document.createElement("td"); td.textContent=d;
-    const today=new Date(); if(d===today.getDate() && month===today.getMonth() && year===today.getFullYear()){ td.className="today"; }
-    row.appendChild(td); if((firstDay+d)%7===0){ tbody.appendChild(row); row=document.createElement("tr"); }
-  }
-  tbody.appendChild(row);
+function renderMiniCalendar(){
+    const tbody = document.querySelector("#miniCalendar tbody");
+    tbody.innerHTML = "";
+    const month = currentDate.getMonth();
+    const year = currentDate.getFullYear();
+    const firstDay = new Date(year,month,1).getDay();
+    const lastDate = new Date(year,month+1,0).getDate();
+    let row = document.createElement("tr");
+    for(let i=0;i<firstDay;i++) row.appendChild(document.createElement("td"));
+    for(let d=1;d<=lastDate;d++){
+        const td = document.createElement("td"); td.textContent=d;
+        const today = new Date();
+        if(d===today.getDate() && month===today.getMonth() && year===today.getFullYear()) td.className="today";
+        row.appendChild(td);
+        if((firstDay+d)%7===0){ tbody.appendChild(row); row = document.createElement("tr"); }
+    }
+    tbody.appendChild(row);
 }
 
-// --- Card Creation Functions ---
-function createIncomeCard(i) {
-  const div=document.createElement("div"); div.className="card";
-
-  const typeGroup=document.createElement("div"); typeGroup.className="input-group";
-  const typeInput=document.createElement("input"); typeInput.type="text"; typeInput.value=i.type||"Salary"; typeInput.placeholder="Type (Salary/Other)";
-  typeInput.addEventListener("input",e=>i.type=e.target.value); typeGroup.appendChild(typeInput);
-
-  const descGroup=document.createElement("div"); descGroup.className="input-group";
-  const descInput=document.createElement("input"); descInput.type="text"; descInput.value=i.custom||""; descInput.placeholder="Description";
-  descInput.addEventListener("input",e=>i.custom=e.target.value); descGroup.appendChild(descInput);
-
-  const dateGroup=document.createElement("div"); dateGroup.className="input-group";
-  const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=i.date||new Date().toISOString().split("T")[0];
-  dateInput.addEventListener("input",()=>{i.date=dateInput.value; renderEntries();}); dateGroup.appendChild(dateInput);
-
-  const amountGroup=document.createElement("div"); amountGroup.className="inline-group";
-  const expectedInput=document.createElement("input"); expectedInput.type="number"; expectedInput.value=i.expected||0; expectedInput.placeholder="Expected";
-  expectedInput.addEventListener("input",e=>i.expected=parseFloat(e.target.value)||0);
-  const actualInput=document.createElement("input"); actualInput.type="number"; actualInput.value=i.actual||0; actualInput.placeholder="Actual";
-  actualInput.addEventListener("input",e=>i.actual=parseFloat(e.target.value)||0);
-  amountGroup.append(expectedInput, actualInput);
-
-  const progress=document.createElement("div"); progress.className="progress-container";
-  const fill=document.createElement("div"); fill.className="progress-fill"; fill.style.width=`${i.expected?Math.min(i.actual/i.expected,1)*100:0}%`;
-  progress.appendChild(fill);
-
-  const paidGroup=document.createElement("div"); paidGroup.className="inline-group";
-  const paidLabel=document.createElement("label"); paidLabel.className="switch";
-  const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!i.paidDate;
-  const paidSpan=document.createElement("span"); paidSpan.className="slider"; paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
-  const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=i.paidDate||"";
-  paidInput.addEventListener("change",()=>{i.paidDate=paidInput.checked?new Date().toISOString().split("T")[0]:""; paidDateInput.value=i.paidDate; updateDashboard();});
-  paidDateInput.addEventListener("input",()=>{i.paidDate=paidDateInput.value; updateDashboard();});
-  paidGroup.append(paidLabel, paidDateInput);
-
-  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️";
-  removeBtn.addEventListener("click",()=>{incomes.splice(incomes.indexOf(i),1); renderEntries();});
-
-  div.append(typeGroup, descGroup, dateGroup, amountGroup, progress, paidGroup, removeBtn);
-  return div;
+// --- Render Dashboard ---
+function updateDashboard(){
+    const filteredInc = incomes.filter(i=>i.date && new Date(i.date).getMonth()===currentDate.getMonth() && new Date(i.date).getFullYear()===currentDate.getFullYear());
+    const filteredBills = bills.filter(b=>b.date && new Date(b.date).getMonth()===currentDate.getMonth() && new Date(b.date).getFullYear()===currentDate.getFullYear());
+    const totalInc = filteredInc.reduce((a,b)=>a+(+b.actual||0),0);
+    const totalBills = filteredBills.reduce((a,b)=>a+(+b.amount||0),0);
+    const paidInc = filteredInc.filter(i=>i.paidDate).reduce((a,b)=>a+(+b.actual||0),0);
+    const percent = totalInc ? Math.round((paidInc/totalInc)*100) : 0;
+    document.getElementById("dashIncome").innerText = `Income: $${totalInc.toFixed(2)}`;
+    document.getElementById("dashBills").innerText = `Bills: $${totalBills.toFixed(2)}`;
+    document.getElementById("dashLeft").innerText = `Left: $${(paidInc-totalBills).toFixed(2)}`;
+    document.getElementById("dashPercent").innerText = `Received: ${percent}%`;
 }
 
-function createBillCard(b) {
-  const div=document.createElement("div"); div.className="card";
+// --- Save to localStorage ---
+function saveData(){ localStorage.setItem("incomes",JSON.stringify(incomes)); localStorage.setItem("bills",JSON.stringify(bills)); }
 
-  const nameGroup=document.createElement("div"); nameGroup.className="input-group";
-  const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.value=b.name||""; nameInput.placeholder="Bill Name";
-  nameInput.addEventListener("input",()=>b.name=nameInput.value); nameGroup.appendChild(nameInput);
-
-  const dateGroup=document.createElement("div"); dateGroup.className="input-group";
-  const dateInput=document.createElement("input"); dateInput.type="date"; dateInput.value=b.date||new Date().toISOString().split("T")[0];
-  dateInput.addEventListener("input",()=>{b.date=dateInput.value; renderEntries();}); dateGroup.appendChild(dateInput);
-
-  const amountGroup=document.createElement("div"); amountGroup.className="input-group";
-  const amountInput=document.createElement("input"); amountInput.type="number"; amountInput.value=b.amount||0; amountInput.placeholder="Amount";
-  amountInput.addEventListener("input",()=>b.amount=parseFloat(amountInput.value)||0); amountGroup.appendChild(amountInput);
-
-  const paidGroup=document.createElement("div"); paidGroup.className="inline-group";
-  const paidLabel=document.createElement("label"); paidLabel.className="switch";
-  const paidInput=document.createElement("input"); paidInput.type="checkbox"; paidInput.checked=!!b.paidDate;
-  const paidSpan=document.createElement("span"); paidSpan.className="slider"; paidLabel.appendChild(paidInput); paidLabel.appendChild(paidSpan);
-  const paidDateInput=document.createElement("input"); paidDateInput.type="date"; paidDateInput.value=b.paidDate||"";
-  paidInput.addEventListener("change",()=>{b.paidDate=paidInput.checked?new Date().toISOString().split("T")[0]:""; paidDateInput.value=b.paidDate; updateDashboard();});
-  paidDateInput.addEventListener("input",()=>{b.paidDate=paidDateInput.value; updateDashboard();});
-  paidGroup.append(paidLabel, paidDateInput);
-
-  const removeBtn=document.createElement("button"); removeBtn.className="removeBtn"; removeBtn.textContent="🗑️";
-  removeBtn.addEventListener("click",()=>{bills.splice(bills.indexOf(b),1); renderEntries();});
-
-  div.append(nameGroup, dateGroup, amountGroup, paidGroup, removeBtn);
-  return div;
+// --- Render Entries ---
+function render(){
+    const incomeC = document.getElementById("incomeContainer");
+    const billC = document.getElementById("billContainer");
+    incomeC.innerHTML=""; billC.innerHTML="";
+    incomes.forEach((i,index)=>{
+        const card = document.createElement("div"); card.className="card";
+        card.innerHTML = `
+        <div class="input-group">
+            <input type="text" value="${i.type||'Salary'}" placeholder="Type (Salary/Other)" onchange="incomes[${index}].type=this.value; saveData(); render();">
+        </div>
+        <div class="input-group">
+            <input type="text" value="${i.custom||''}" placeholder="Description" onchange="incomes[${index}].custom=this.value; saveData(); render();">
+        </div>
+        <div class="input-group">
+            <input type="date" value="${i.date||new Date().toISOString().split('T')[0]}" onchange="incomes[${index}].date=this.value; saveData(); render();">
+        </div>
+        <div class="inline-group">
+            <input type="number" placeholder="Actual" value="${i.actual||0}" onchange="incomes[${index}].actual=parseFloat(this.value)||0; saveData(); render();">
+            <input type="number" placeholder="Expected" value="${i.expected||0}" onchange="incomes[${index}].expected=parseFloat(this.value)||0; saveData(); render();">
+        </div>
+        <div class="progress-container"><div class="progress-fill" style="width:${i.expected?Math.min(i.actual/i.expected,1)*100:0}%"></div></div>
+        <div class="inline-group">
+            <label class="switch">
+                <input type="checkbox" ${i.paidDate?'checked':''} onchange="incomes[${index}].paidDate=this.checked?new Date().toISOString().split('T')[0]:''; saveData(); render();">
+                <span class="slider"></span>
+            </label>
+            <input type="date" value="${i.paidDate||''}" onchange="incomes[${index}].paidDate=this.value; saveData(); render();">
+        </div>
+        <button class="removeBtn" onclick="incomes.splice(${index},1); saveData(); render();">🗑️</button>
+        `;
+        incomeC.appendChild(card);
+    });
+    bills.forEach((b,index)=>{
+        const card = document.createElement("div"); card.className="card";
+        card.innerHTML = `
+        <div class="input-group">
+            <input type="text" value="${b.name||''}" placeholder="Bill Name" onchange="bills[${index}].name=this.value; saveData(); render();">
+        </div>
+        <div class="input-group">
+            <input type="date" value="${b.date||new Date().toISOString().split('T')[0]}" onchange="bills[${index}].date=this.value; saveData(); render();">
+        </div>
+        <div class="input-group">
+            <input type="number" placeholder="Amount" value="${b.amount||0}" onchange="bills[${index}].amount=parseFloat(this.value)||0; saveData(); render();">
+        </div>
+        <div class="inline-group">
+            <label class="switch">
+                <input type="checkbox" ${b.paidDate?'checked':''} onchange="bills[${index}].paidDate=this.checked?new Date().toISOString().split('T')[0]:''; saveData(); render();">
+                <span class="slider"></span>
+            </label>
+            <input type="date" value="${b.paidDate||''}" onchange="bills[${index}].paidDate=this.value; saveData(); render();">
+        </div>
+        <button class="removeBtn" onclick="bills.splice(${index},1); saveData(); render();">🗑️</button>
+        `;
+        billC.appendChild(card);
+    });
+    updateDashboard();
+    renderMiniCalendar();
 }
 
-// --- Render ---
-function renderEntries() {
-  const incomeC=document.getElementById("incomeContainer"); const billC=document.getElementById("billContainer");
-  incomeC.innerHTML=""; billC.innerHTML="";
-  incomes.forEach(i=>incomeC.appendChild(createIncomeCard(i)));
-  bills.forEach(b=>billC.appendChild(createBillCard(b)));
-  updateDashboard(); renderMiniCalendar();
-}
+// --- Add Buttons ---
+document.getElementById("addIncomeBtn").onclick = ()=>{
+    incomes.push({type:'Salary',custom:'',date:new Date().toISOString().split('T')[0],actual:0,expected:0,paidDate:''});
+    saveData(); render();
+};
+document.getElementById("addBillBtn").onclick = ()=>{
+    bills.push({name:'Bill',date:new Date().toISOString().split('T')[0],amount:0,paidDate:''});
+    saveData(); render();
+};
 
-// Month/Year dropdowns
-const monthSelect=document.getElementById("monthSelect"); const yearSelect=document.getElementById("yearSelect");
-for(let m=0;m<12;m++){ let opt=document.createElement("option"); opt.value=m; opt.text=new Date(2000,m,1).toLocaleString('default',{month:'long'}); monthSelect.appendChild(opt);}
-for(let y=currentDate.getFullYear()-5;y<=currentDate.getFullYear()+5;y++){ let opt=document.createElement("option"); opt.value=y; opt.text=y; yearSelect.appendChild(opt);}
-monthSelect.value=currentDate.getMonth(); yearSelect.value=currentDate.getFullYear();
-monthSelect.addEventListener("change",()=>{currentDate.setMonth(parseInt(monthSelect.value)); renderEntries();});
-yearSelect.addEventListener("change",()=>{currentDate.setFullYear(parseInt(yearSelect.value)); renderEntries();});
-
-// Add buttons
-document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary",expected:0,actual:0,paidDate:"",custom:"",date:new Date().toISOString().split("T")[0]}); renderEntries();});
-document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"Bill",amount:0,paidDate:"",date:new Date().toISOString().split("T")[0]}); renderEntries();});
-
-renderEntries();
+// Initial render
+render();
 </script>
 </body>
 </html>
