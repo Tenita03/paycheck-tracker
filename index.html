@@ -3,37 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker v38</title>
+<title>Paycheck Tracker v39</title>
 <style>
 :root{
   --bg:#FDF9F5; --text:#333; --accent:#FFD6A5;
-  --salary:#A0E7E5; --other:#FFAEBC; --paid:#B9FBC0; --border:#E0E0E0;
+  --salary:#A0E7E5; --other:#FFAEBC; --paid:#FFF4C1; --border:#E0E0E0;
   --progress-bg:#E0E0E0; --progress-fill:#FFD6A5;
 }
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro"; background:var(--bg); color:var(--text);}
-#appContainer { width:100%; height:100vh; padding:8px 12px; display:flex; flex-direction:column; box-sizing:border-box; }
-header{padding:12px; font-size:24px; font-weight:700; text-align:center;}
-.dashboard{display:flex; justify-content:space-around; font-weight:700; padding:8px 0; margin-bottom:8px; background:#fff; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.08);}
-.section-header{font-weight:700; font-size:18px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;}
-.add-btn{padding:6px 12px; border-radius:12px; font-size:16px; background:var(--accent); color:#333; border:none; cursor:pointer;}
-.scrollable-container{flex:1; overflow-y:auto; margin-bottom:12px; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08);}
-table{width:100%; border-collapse:collapse; font-size:14px;}
-th, td{padding:6px 8px; text-align:left; border-bottom:1px solid var(--border);}
+#appContainer { width:100%; height:100vh; padding:10px; display:flex; flex-direction:column; box-sizing:border-box; }
+header{padding:12px; font-size:26px; font-weight:700; text-align:center;}
+.dashboard{display:flex; justify-content:space-around; font-weight:700; padding:10px 0; margin-bottom:10px; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.1);}
+.section-header{font-weight:700; font-size:18px; margin:10px 0; display:flex; justify-content:space-between; align-items:center;}
+.add-btn{padding:8px 14px; border-radius:14px; font-size:16px; background:var(--accent); color:#333; border:none; cursor:pointer;}
+.scrollable-container{flex:1; overflow-y:auto; margin-bottom:12px; background:#fff; border-radius:14px; box-shadow:0 3px 6px rgba(0,0,0,0.08);}
+table{width:100%; border-collapse:collapse; font-size:15px;}
+th, td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--border);}
 th{background:#EDEDED; font-weight:700;}
 tr:nth-child(even){background:#F9F9F9;}
-input[type=text], input[type=number], input[type=date]{width:100%; box-sizing:border-box; padding:4px 6px; border-radius:6px; border:1px solid #ccc; font-size:14px;}
-.switch{position:relative; display:inline-block; width:40px; height:22px;}
+input[type=text], input[type=number], input[type=date]{width:100%; box-sizing:border-box; padding:6px 8px; border-radius:8px; border:1px solid #ccc; font-size:15px;}
+.switch{position:relative; display:inline-block; width:42px; height:24px;}
 .switch input{opacity:0; width:0; height:0;}
-.slider{position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:22px; transition:0.4s;}
-.slider:before{position:absolute; content:""; height:18px; width:18px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;}
-input:checked + .slider{background-color:var(--paid);}
+.slider{position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#d1d5db; border-radius:24px; transition:0.4s;}
+.slider:before{position:absolute; content:""; height:20px; width:20px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s;}
+input:checked + .slider{background-color:#B9FBC0;}
 input:checked + .slider:before{transform:translateX(18px);}
-.paidRow{background:var(--paid); color:#333;}
+.paidRow{background:var(--paid);}
 .picker-overlay{position:fixed; inset:0; background:rgba(0,0,0,0.25); display:none; align-items:center; justify-content:center; z-index:1000;}
 .picker-sheet{background:#fff; border-radius:12px; padding:12px; min-width:180px; box-shadow:0 3px 12px rgba(0,0,0,0.2);}
 .picker-option{padding:8px; text-align:center; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:0.15s; background:#F2F2F7;}
 .picker-option:hover{background:#E0E0E0;}
-.progress-container{width:100%; background:var(--progress-bg); border-radius:6px; height:12px; margin-top:4px;}
+.progress-container{width:100%; background:var(--progress-bg); border-radius:6px; height:14px; margin-top:4px;}
 .progress-fill{height:100%; background:var(--progress-fill); border-radius:6px;}
 </style>
 </head>
@@ -201,7 +201,7 @@ billTbody.appendChild(tr);
 updateDashboard();
 }
 
-// Add buttons (attach once)
+// Add buttons
 document.getElementById("addIncomeBtn").addEventListener("click",()=>{incomes.push({type:"Salary", custom:"", expected:0, actual:0, paidDate:""}); save(); render();});
 document.getElementById("addBillBtn").addEventListener("click",()=>{bills.push({name:"", amount:0, due:"", paidDate:""}); save(); render();});
 
