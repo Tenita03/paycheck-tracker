@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker — Expected/Actual & Running Totals</title>
+<title>Paycheck Tracker — Monthly Totals</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -58,8 +58,6 @@ header{text-align:center;font-size:28px;padding:12px;}
 /* Dashboard */
 .dashboard{display:flex;justify-content:space-around;align-items:center;
 background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:15px;}
-.progress-container{width:80%;height:8px;background:#E0E0E0;border-radius:6px;overflow:hidden;margin-top:4px;}
-.progress-fill{height:100%;background:#FFB347;width:0%;transition:width .3s;}
 
 /* Tables */
 .section{margin:10px;}
@@ -111,9 +109,6 @@ input:checked+.slider:before{transform:translateX(16px);}
 #billTable tbody tr[style*="FFE4E1"]{
   background: linear-gradient(to right, #FFE4E1, #FFD1D1);
 }
-
-/* Running total cells */
-.runningTotal{font-weight:bold;}
 </style>
 </head>
 <body>
@@ -142,9 +137,6 @@ input:checked+.slider:before{transform:translateX(16px);}
   <div>Total Income: $<span id="dashIncome">0</span></div>
   <div>Total Bills: $<span id="dashBills">0</span></div>
   <div>Left: $<span id="dashLeft">0</span></div>
-  <div>Received:
-    <div class="progress-container"><div class="progress-fill" id="dashProgress"></div></div>
-  </div>
 </div>
 
 <div class="section">
@@ -152,8 +144,8 @@ input:checked+.slider:before{transform:translateX(16px);}
 <button id="addIncomeBtn" class="addEntryBtn">➕ Add Income</button>
 <table id="incomeTable">
 <thead><tr>
-<th>Type</th><th>Description</th><th>Date</th><th>Expected</th><th>Actual</th>
-<th>Received?</th><th>Date Received</th><th>Remove</th><th>Running Total</th>
+<th>Type</th><th>Description</th><th>Date Received</th><th>Expected</th><th>Actual</th>
+<th>Remove</th>
 </tr></thead><tbody></tbody>
 </table>
 </div>
@@ -163,7 +155,7 @@ input:checked+.slider:before{transform:translateX(16px);}
 <button id="addBillBtn" class="addEntryBtn">➕ Add Bill</button>
 <table id="billTable">
 <thead><tr>
-<th>Bill Name</th><th>Date Due</th><th>Amount</th><th>Paid?</th><th>Date Paid</th><th>Remove</th><th>Running Total</th>
+<th>Bill Name</th><th>Date Due</th><th>Amount</th><th>Paid?</th><th>Date Paid</th><th>Remove</th>
 </tr></thead><tbody></tbody>
 </table>
 </div>
@@ -220,24 +212,15 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-// Update dashboard + running totals
+// Update dashboard totals
 function updateDashboard(){
   const f=e=>{const d=parseLocalDate(e.date);return d && d.getMonth()===currentDate.getMonth() && d.getFullYear()===currentDate.getFullYear() && (!selectedDay || d.getDate()===selectedDay);};
   const inc=incomes.filter(f),bil=bills.filter(f);
   const incAct=inc.reduce((s,i)=>s+(+i.actual||0),0);
-  const incExp=inc.reduce((s,i)=>s+(+i.expected||0),0);
   const bilAmt=bil.reduce((s,b)=>s+(+b.amount||0),0);
-  const pct=incExp?Math.min((incAct/incExp)*100,100):0;
   dashIncome.textContent=incAct.toFixed(2);
   dashBills.textContent=bilAmt.toFixed(2);
   dashLeft.textContent=(incAct-bilAmt).toFixed(2);
-  dashProgress.style.width=pct+"%";
-
-  // Running totals
-  let runningInc=0;
-  document.querySelectorAll("#incomeTable tbody tr").forEach((tr,i)=>{const val=inc[i]?.actual||0;runningInc+=val;let cell=tr.querySelector(".runningTotal");if(!cell){cell=document.createElement("td");cell.className="runningTotal";tr.appendChild(cell);}cell.textContent=`$${runningInc.toFixed(2)}`;});
-  let runningBil=0;
-  document.querySelectorAll("#billTable tbody tr").forEach((tr,i)=>{const val=bil[i]?.amount||0;runningBil+=val;let cell=tr.querySelector(".runningTotal");if(!cell){cell=document.createElement("td");cell.className="runningTotal";tr.appendChild(cell);}cell.textContent=`$${runningBil.toFixed(2)}`;});
 }
 
 // Render tables
@@ -256,10 +239,7 @@ function render(){
     <td><input type="date" value="${i.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="incomes[${x}].date=this.value;saveData();"></td>
     <td><input type="number" placeholder="$0.00" value="${i.expected||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].expected=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
     <td><input type="number" placeholder="$0.00" value="${i.actual||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="incomes[${x}].actual=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
-    <td><label class='switch'><input type='checkbox' ${i.receivedDate?'checked':''} onchange="incomes[${x}].receivedDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();"><span class='slider'></span></label></td>
-    <td><input type="date" value="${i.receivedDate||''}" onchange="incomes[${x}].receivedDate=this.value;saveData();"></td>
-    <td><button class='removeBtn' onclick='incomes.splice(${x},1);saveData();render();'>🗑️</button></td>
-    <td class="runningTotal"></td>`;it.appendChild(tr);}
+    <td><button class='removeBtn' onclick='incomes.splice(${x},1);saveData();render();'>🗑️</button></td>`;it.appendChild(tr);}
   });
 
   // Bills
@@ -272,8 +252,7 @@ function render(){
     <td><input type="number" placeholder="$0.00" value="${b.amount||0}" onfocus="if(this.value=='0'){this.value='';}" onblur="if(this.value===''){this.value='0';}" onchange="bills[${x}].amount=parseFloat(this.value.replace(/\$/g,''))||0;saveData();"></td>
     <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();"><span class='slider'></span></label></td>
     <td><input type="date" value="${b.paidDate||''}" onchange="bills[${x}].paidDate=this.value;saveData();"></td>
-    <td><button class='removeBtn' onclick='bills.splice(${x},1);saveData();render();'>🗑️</button></td>
-    <td class="runningTotal"></td>`;bt.appendChild(tr);}
+    <td><button class='removeBtn' onclick='bills.splice(${x},1);saveData();render();'>🗑️</button></td>`;bt.appendChild(tr);}
   });
 }
 
