@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paycheck Tracker (VS40 Refined)</title>
+<title>Paycheck Tracker (CST Fixed)</title>
 <style>
 body{font-family:Arial,sans-serif;background:#FDF9F5;margin:0;padding:0;}
 header{text-align:center;font-size:28px;padding:12px;}
@@ -12,11 +12,11 @@ header{text-align:center;font-size:28px;padding:12px;}
 .monthNav{display:flex;justify-content:center;gap:10px;margin:10px;}
 
 /* Compact calendar */
-#miniCalendarContainer{display:flex;justify-content:center;margin:6px 0;}
+#miniCalendarContainer{display:flex;justify-content:center;margin:4px 0;}
 #miniCalendar{width:auto;border-collapse:collapse;}
 #miniCalendar th,#miniCalendar td{
-  width:22px;height:22px;text-align:center;border:1px solid #ccc;
-  font-size:11px;cursor:pointer;
+  width:20px;height:20px;text-align:center;border:1px solid #ccc;
+  font-size:10px;cursor:pointer;
 }
 #miniCalendar td.today{background:#FFD6A5;border-radius:50%;}
 #miniCalendar td.selected{background:#FFB347;border-radius:50%;}
@@ -30,24 +30,24 @@ background:#FFF3E0;padding:10px;margin:10px;border-radius:10px;font-size:16px;}
 /* Tables */
 .section{margin:10px;}
 table{width:100%;border-collapse:collapse;}
-table tbody{display:block;max-height:220px;overflow-y:auto;}
+table tbody{display:block;max-height:200px;overflow-y:auto;}
 table thead,table tbody tr{display:table;width:100%;table-layout:fixed;}
-th,td{border:1px solid #ccc;padding:4px 6px;font-size:13px;text-align:center;height:34px;}
+th,td{border:1px solid #ccc;padding:3px 5px;font-size:12px;text-align:center;height:30px;}
 table input[type="text"],table input[type="number"],table input[type="date"]{
-  width:95%;box-sizing:border-box;padding:2px 4px;font-size:12px;text-align:center;
+  width:95%;box-sizing:border-box;padding:2px 3px;font-size:11px;text-align:center;
   border-radius:4px;border:1px solid #ccc;
 }
 
 /* Buttons & toggles */
-.addEntryBtn{font-size:14px;padding:6px 10px;border-radius:12px;background:#FFD6A5;
-border:none;cursor:pointer;margin:6px 0;}
+.addEntryBtn{font-size:13px;padding:6px 10px;border-radius:10px;background:#FFD6A5;
+border:none;cursor:pointer;margin:4px 0;}
 button.removeBtn{background:#FF6B6B;color:#fff;border:none;border-radius:6px;
-padding:4px 8px;cursor:pointer;font-size:11px;}
-.switch{position:relative;display:inline-block;width:34px;height:18px;}
+padding:3px 6px;cursor:pointer;font-size:10px;}
+.switch{position:relative;display:inline-block;width:32px;height:16px;}
 .switch input{opacity:0;width:0;height:0;}
 .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;
 background:#d1d5db;border-radius:24px;transition:.4s;}
-.slider:before{position:absolute;content:"";height:14px;width:14px;left:2px;bottom:2px;
+.slider:before{position:absolute;content:"";height:12px;width:12px;left:2px;bottom:2px;
 background:#fff;border-radius:50%;transition:.4s;}
 input:checked+.slider{background:#B9FBC1;}
 input:checked+.slider:before{transform:translateX(16px);}
@@ -99,20 +99,23 @@ input:checked+.slider:before{transform:translateX(16px);}
 </div>
 
 <script>
-// --- Helpers ---
-function localISODate(year,month,day){
-  const d=new Date(year,month,day);
-  d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
+// ---- Utilities ----
+function localISODate(y,m,d){
+  const mm=String(m+1).padStart(2,'0');
+  const dd=String(d).padStart(2,'0');
+  return `${y}-${mm}-${dd}`;
 }
 
-// --- Data ---
+// ---- Data ----
 let incomes=JSON.parse(localStorage.getItem("incomes"))||[];
 let bills=JSON.parse(localStorage.getItem("bills"))||[];
 let currentDate=new Date();
 let selectedDay=currentDate.getDate();
 
-// --- Month/year selects ---
+function saveData(){localStorage.setItem("incomes",JSON.stringify(incomes));
+localStorage.setItem("bills",JSON.stringify(bills));}
+
+// ---- Dropdowns ----
 const monthSelect=document.getElementById("monthSelect");
 const yearSelect=document.getElementById("yearSelect");
 for(let m=0;m<12;m++){
@@ -129,7 +132,7 @@ yearSelect.value=currentDate.getFullYear();
 monthSelect.onchange=()=>{currentDate.setMonth(+monthSelect.value);render();}
 yearSelect.onchange=()=>{currentDate.setFullYear(+yearSelect.value);render();}
 
-// --- Calendar ---
+// ---- Calendar ----
 function renderMiniCalendar(){
   const body=document.querySelector("#miniCalendar tbody");
   body.innerHTML="";
@@ -151,7 +154,7 @@ function renderMiniCalendar(){
   if(row.children.length>0)body.appendChild(row);
 }
 
-// --- Dashboard ---
+// ---- Dashboard ----
 function updateDashboard(){
   const f=e=>new Date(e.date).getMonth()===currentDate.getMonth()&&
               new Date(e.date).getFullYear()===currentDate.getFullYear()&&
@@ -167,11 +170,7 @@ function updateDashboard(){
   dashProgress.style.width=pct+"%";
 }
 
-// --- Save ---
-function saveData(){localStorage.setItem("incomes",JSON.stringify(incomes));
-localStorage.setItem("bills",JSON.stringify(bills));}
-
-// --- Render ---
+// ---- Render ----
 function render(){
   renderMiniCalendar();
   updateDashboard();
@@ -179,42 +178,42 @@ function render(){
               new Date(e.date).getFullYear()===currentDate.getFullYear()&&
               (!selectedDay||new Date(e.date).getDate()===selectedDay);
 
-  // Incomes
-  const it=document.querySelector("#incomeTable tbody");it.innerHTML="";
+  const it=document.querySelector("#incomeTable tbody");
+  it.innerHTML="";
   incomes.forEach((i,x)=>{
     if(f(i)){
       const tr=document.createElement("tr");
       tr.innerHTML=`
-      <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${x}].type=this.value;saveData();render();"></td>
-      <td><input type="text" value="${i.description||''}" onchange="incomes[${x}].description=this.value;saveData();render();"></td>
-      <td><input type="date" value="${i.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="incomes[${x}].date=this.value;saveData();render();"></td>
-      <td><input type="number" value="${i.actual||0}" onchange="incomes[${x}].actual=parseFloat(this.value)||0;saveData();render();"></td>
-      <td><input type="number" value="${i.expected||0}" onchange="incomes[${x}].expected=parseFloat(this.value)||0;saveData();render();"></td>
-      <td><label class='switch'><input type='checkbox' ${i.receivedDate?'checked':''} onchange="incomes[${x}].receivedDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();render();"><span class='slider'></span></label></td>
-      <td><input type="date" value="${i.receivedDate||''}" onchange="incomes[${x}].receivedDate=this.value;saveData();render();"></td>
+      <td><input type="text" value="${i.type||'Salary'}" onchange="incomes[${x}].type=this.value;saveData();"></td>
+      <td><input type="text" value="${i.description||''}" onchange="incomes[${x}].description=this.value;saveData();"></td>
+      <td><input type="date" value="${i.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="incomes[${x}].date=this.value;saveData();"></td>
+      <td><input type="number" value="${i.actual||0}" onchange="incomes[${x}].actual=parseFloat(this.value)||0;saveData();"></td>
+      <td><input type="number" value="${i.expected||0}" onchange="incomes[${x}].expected=parseFloat(this.value)||0;saveData();"></td>
+      <td><label class='switch'><input type='checkbox' ${i.receivedDate?'checked':''} onchange="incomes[${x}].receivedDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();"><span class='slider'></span></label></td>
+      <td><input type="date" value="${i.receivedDate||''}" onchange="incomes[${x}].receivedDate=this.value;saveData();"></td>
       <td><button class='removeBtn' onclick='incomes.splice(${x},1);saveData();render();'>🗑️</button></td>`;
       it.appendChild(tr);
     }
   });
 
-  // Bills
-  const bt=document.querySelector("#billTable tbody");bt.innerHTML="";
+  const bt=document.querySelector("#billTable tbody");
+  bt.innerHTML="";
   bills.forEach((b,x)=>{
     if(f(b)){
       const tr=document.createElement("tr");
       tr.innerHTML=`
-      <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();render();"></td>
-      <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();render();"></td>
-      <td><input type="number" value="${b.amount||0}" onchange="bills[${x}].amount=parseFloat(this.value)||0;saveData();render();"></td>
-      <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();render();"><span class='slider'></span></label></td>
-      <td><input type="date" value="${b.paidDate||''}" onchange="bills[${x}].paidDate=this.value;saveData();render();"></td>
+      <td><input type="text" value="${b.name||''}" onchange="bills[${x}].name=this.value;saveData();"></td>
+      <td><input type="date" value="${b.date||localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay)}" onchange="bills[${x}].date=this.value;saveData();"></td>
+      <td><input type="number" value="${b.amount||0}" onchange="bills[${x}].amount=parseFloat(this.value)||0;saveData();"></td>
+      <td><label class='switch'><input type='checkbox' ${b.paidDate?'checked':''} onchange="bills[${x}].paidDate=this.checked?localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay):'';saveData();"><span class='slider'></span></label></td>
+      <td><input type="date" value="${b.paidDate||''}" onchange="bills[${x}].paidDate=this.value;saveData();"></td>
       <td><button class='removeBtn' onclick='bills.splice(${x},1);saveData();render();'>🗑️</button></td>`;
       bt.appendChild(tr);
     }
   });
 }
 
-// --- Add buttons ---
+// ---- Add Buttons ----
 addIncomeBtn.onclick=()=>{
   const dateStr=localISODate(currentDate.getFullYear(),currentDate.getMonth(),selectedDay);
   incomes.push({type:'Salary',description:'',date:dateStr,actual:0,expected:0,receivedDate:''});
@@ -226,7 +225,11 @@ addBillBtn.onclick=()=>{
   saveData();render();
 };
 
+// Initial render
 render();
+
+// Re-render only when focus leaves input fields
+window.addEventListener("focusout",()=>render());
 </script>
 </body>
 </html>
